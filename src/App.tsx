@@ -1,5 +1,7 @@
-import { useState, useRef, useCallback } from 'react';
-import { Menu, Sparkles, MessageCircle, ChevronLeft, ChevronRight, CheckCircle, Play, Upload, Film, Mic, Zap, Shield, Music, Sliders, Database, FileVideo, TrendingUp, BookOpen, Clock, ThumbsUp, Heart, HelpCircle, Plus, Settings, Eye, Layers, X, Download, Save, Wand2, Trash2, Share2, Search } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { Menu, Sparkles, MessageCircle, ChevronLeft, ChevronRight, CheckCircle, Play, Upload, Film, Mic, Zap, Shield, Music, Sliders, Database, FileVideo, TrendingUp, BookOpen, Clock, ThumbsUp, Heart, HelpCircle, Plus, Settings, Eye, Layers, X, Download, Save, Wand2, Trash2, Share2, Search, AlertCircle, LogOut } from 'lucide-react';
+import { useAuth } from './hooks/useAuth';
+import { DevTools } from './components/DevTools';
 
 // 600+ AI TOOLS - COMPLETE LIST
 const AI_TOOLS = {
@@ -38,10 +40,81 @@ export default function App() {
   ]);
   const [newComment, setNewComment] = useState({});
   const [toolSearch, setToolSearch] = useState('');
-  const [userPlan] = useState('Studio • Admin');
+
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [registerName, setRegisterName] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [showDevTools, setShowDevTools] = useState(false);
 
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
+
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+        e.preventDefault();
+        if (auth.isAuthenticated) {
+          setShowDevTools(true);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [auth.isAuthenticated]);
+
+  const handleLogin = async () => {
+    if (!loginEmail || !loginPassword) {
+      setAuthError('Please enter email and password');
+      return;
+    }
+    setAuthLoading(true);
+    setAuthError(null);
+    const { error } = await auth.signIn(loginEmail, loginPassword);
+    setAuthLoading(false);
+    if (!error) {
+      setPage(4);
+      setLoginEmail('');
+      setLoginPassword('');
+    } else {
+      setAuthError(error);
+    }
+  };
+
+  const handleRegister = async () => {
+    if (!registerName || !registerEmail || !registerPassword) {
+      setAuthError('Please fill in all fields');
+      return;
+    }
+    if (registerPassword.length < 6) {
+      setAuthError('Password must be at least 6 characters');
+      return;
+    }
+    setAuthLoading(true);
+    setAuthError(null);
+    const { error } = await auth.signUp(registerEmail, registerPassword, registerName);
+    setAuthLoading(false);
+    if (!error) {
+      setPage(4);
+      setRegisterName('');
+      setRegisterEmail('');
+      setRegisterPassword('');
+    } else {
+      setAuthError(error);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await auth.signOut();
+    setPage(1);
+    setMediaLibrary([]);
+    setTimeline({ video: [], audio: [], text: [] });
+    setCurrentVideo(null);
+  };
 
   const handleFileUpload = useCallback((e) => {
     const files = Array.from(e.target.files);
@@ -189,6 +262,20 @@ export default function App() {
     setNewComment(prev => ({ ...prev, [postId]: '' }));
   }, [newComment]);
 
+  if (auth.loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-24 h-24 rounded-full bg-[#7c3aed]/30 flex items-center justify-center mx-auto mb-6 relative">
+            <div className="absolute inset-0 rounded-full border-8 border-[#7c3aed] border-t-transparent animate-spin"/>
+            <Sparkles size={48} className="text-[#7c3aed]"/>
+          </div>
+          <p className="text-xl font-bold text-[#7c3aed]">Loading MandaStrong Studio...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black text-white relative">
       <style>{`
@@ -217,11 +304,33 @@ export default function App() {
           </button>
           {menuOpen && (
             <div className="absolute top-20 left-0 bg-zinc-950 border border-[#7c3aed] p-6 rounded-2xl w-72 shadow-2xl max-h-[80vh] overflow-y-auto scrollbar">
-              <div className="bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] p-4 rounded-xl mb-6 text-center">
-                <div className="text-xs font-bold text-white/70 mb-1">CURRENT PLAN</div>
-                <div className="text-2xl font-black text-white">{userPlan}</div>
-                <div className="text-xs text-white/90 mt-2">8K Export • 600 AI Tools • 1TB Storage</div>
-              </div>
+              {auth.isAuthenticated ? (
+                <>
+                  <div className="bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] p-4 rounded-xl mb-4 text-center">
+                    <div className="text-xs font-bold text-white/70 mb-1">CURRENT PLAN</div>
+                    <div className="text-2xl font-black text-white">{auth.getPlanDisplayName()}</div>
+                    <div className="text-xs text-white/90 mt-2">
+                      {auth.profile?.plan === 'studio' || auth.profile?.plan === 'admin' ? '8K Export • 600 AI Tools • 1TB Storage' :
+                       auth.profile?.plan === 'pro' ? '4K Export • 300 AI Tools • 100GB Storage' :
+                       'HD Export • 100 AI Tools • 10GB Storage'}
+                    </div>
+                    {auth.profile?.email && (
+                      <div className="text-xs text-white/60 mt-2">{auth.profile.email}</div>
+                    )}
+                  </div>
+                  <button onClick={handleSignOut} className="w-full bg-red-600/20 border border-red-600 text-red-400 p-3 rounded-lg font-bold uppercase text-sm hover:bg-red-600/30 transition flex items-center justify-center gap-2 mb-6">
+                    <LogOut size={16}/>
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <div className="bg-zinc-900 border border-[#7c3aed]/50 p-4 rounded-xl mb-4 text-center">
+                  <div className="text-sm font-bold text-white/70 mb-2">Not Signed In</div>
+                  <button onClick={() => {setPage(3);setMenuOpen(false);}} className="w-full bg-[#7c3aed] text-white p-2 rounded-lg font-bold text-sm hover:bg-[#6d28d9] transition">
+                    Login / Register
+                  </button>
+                </div>
+              )}
               <h3 className="text-lg font-black uppercase mb-4 text-[#7c3aed]">Quick Access</h3>
               {[
                 {p:1,l:"Home"},{p:2,l:"Welcome"},{p:3,l:"Login/Pricing"},{p:4,l:"Writing Tools"},{p:5,l:"Voice Tools"},
@@ -311,18 +420,95 @@ export default function App() {
         {/* PAGE 3 - LOGIN & PRICING */}
         {page === 3 && (
           <div className="p-6 pt-16 pb-40 max-w-7xl mx-auto overflow-y-auto scrollbar">
+            {authError && (
+              <div className="max-w-5xl mx-auto mb-8 bg-red-600/20 border-2 border-red-600 rounded-2xl p-6 flex items-start gap-4">
+                <AlertCircle size={24} className="text-red-400 flex-shrink-0 mt-0.5"/>
+                <div>
+                  <h4 className="font-black text-red-400 text-lg mb-1">Authentication Error</h4>
+                  <p className="text-white">{authError}</p>
+                </div>
+                <button onClick={() => setAuthError(null)} className="ml-auto text-red-400 hover:text-red-300">
+                  <X size={20}/>
+                </button>
+              </div>
+            )}
             <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-16">
               <div className="bg-zinc-950 border-2 border-[#7c3aed] p-10 rounded-3xl">
                 <h3 className="text-3xl font-black uppercase mb-6 text-center text-white">Login</h3>
-                <input type="email" placeholder="your@email.com" className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-4 outline-none"/>
-                <input type="password" placeholder="••••••••" className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-6 outline-none"/>
-                <button onClick={() => setPage(4)} className="w-full bg-[#7c3aed] py-4 rounded-xl font-black uppercase hover:bg-[#6d28d9] transition">Login & Start</button>
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                  disabled={authLoading}
+                  className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-4 outline-none disabled:opacity-50"
+                />
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                  disabled={authLoading}
+                  className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-6 outline-none disabled:opacity-50"
+                />
+                <button
+                  onClick={handleLogin}
+                  disabled={authLoading}
+                  className="w-full bg-[#7c3aed] py-4 rounded-xl font-black uppercase hover:bg-[#6d28d9] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {authLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"/>
+                      SIGNING IN...
+                    </>
+                  ) : (
+                    'Login & Start'
+                  )}
+                </button>
               </div>
               <div className="bg-zinc-950 border-2 border-[#7c3aed] p-10 rounded-3xl">
                 <h3 className="text-3xl font-black uppercase mb-6 text-center text-white">Register</h3>
-                <input type="text" placeholder="Your Name" className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-4 outline-none"/>
-                <input type="email" placeholder="your@email.com" className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-4 outline-none"/>
-                <button onClick={() => setPage(4)} className="w-full bg-[#7c3aed] py-4 rounded-xl font-black uppercase hover:bg-[#6d28d9] transition">Create Account</button>
+                <input
+                  type="text"
+                  placeholder="Your Name"
+                  value={registerName}
+                  onChange={(e) => setRegisterName(e.target.value)}
+                  disabled={authLoading}
+                  className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-4 outline-none disabled:opacity-50"
+                />
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={registerEmail}
+                  onChange={(e) => setRegisterEmail(e.target.value)}
+                  disabled={authLoading}
+                  className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-4 outline-none disabled:opacity-50"
+                />
+                <input
+                  type="password"
+                  placeholder="Password (min 6 characters)"
+                  value={registerPassword}
+                  onChange={(e) => setRegisterPassword(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleRegister()}
+                  disabled={authLoading}
+                  className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-4 outline-none disabled:opacity-50"
+                />
+                <button
+                  onClick={handleRegister}
+                  disabled={authLoading}
+                  className="w-full bg-[#7c3aed] py-4 rounded-xl font-black uppercase hover:bg-[#6d28d9] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {authLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"/>
+                      CREATING ACCOUNT...
+                    </>
+                  ) : (
+                    'Create Account'
+                  )}
+                </button>
               </div>
             </div>
             <div className="max-w-6xl mx-auto">
@@ -386,6 +572,12 @@ export default function App() {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-black uppercase text-white">{selectedTool}</h2>
                 <button onClick={() => {setSelectedTool(null);setAiPrompt('');}} className="text-white hover:text-red-500 transition"><X size={32}/></button>
+              </div>
+              <div className="bg-blue-600/20 border-2 border-blue-600 rounded-xl p-4 mb-6">
+                <p className="text-blue-400 font-bold text-sm flex items-center gap-2">
+                  <Sparkles size={16}/>
+                  Demo Mode: AI generation is simulated. No actual AI processing occurs.
+                </p>
               </div>
               <div className="space-y-6">
                 <div className="bg-black border border-[#7c3aed]/30 rounded-xl p-6">
@@ -1185,6 +1377,21 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {showDevTools && auth.isAuthenticated && (
+        <DevTools onClose={() => setShowDevTools(false)} userEmail={auth.profile?.email} />
+      )}
+
+      {auth.isAuthenticated && page >= 3 && (
+        <button
+          onClick={() => setShowDevTools(true)}
+          className="fixed bottom-20 left-6 z-50 bg-zinc-900 border border-[#7c3aed] px-4 py-2 rounded-lg text-xs text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+          title="Press Ctrl+Shift+D"
+        >
+          <Shield size={14} className="inline mr-1"/>
+          Dev Tools
+        </button>
+      )}
     </div>
   );
 }
