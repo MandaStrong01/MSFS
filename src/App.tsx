@@ -1151,7 +1151,6 @@ export default function App() {
               </div>
               <div className="mb-8">
                 <audio autoPlay loop className="w-full"><source src="/ThatsAllFolks.mp3" type="audio/mpeg"/></audio>
-                </video>
               </div>
 
               <h1 className="text-9xl font-black text-[#7c3aed] uppercase text-center mb-16 leading-none">THAT'S ALL FOLKS!</h1>
