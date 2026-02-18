@@ -43,7 +43,7 @@ export default function App() {
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
 
-  const Spinner = ({ message }: { message: string }) => (
+  const Spinner = ({ message }) => (
     <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center">
       <div className="relative w-40 h-40 mb-8">
         <div className="absolute inset-0 rounded-full border-8 border-[#7c3aed]/30"/>
@@ -435,69 +435,28 @@ export default function App() {
         {/* PAGE 10 - UPLOAD MEDIA */}
         {page === 10 && (
           <div className="h-screen flex items-center justify-center p-8">
-            <div className="text-center max-w-4xl w-full">
+            <div className="text-center max-w-3xl">
               <h1 className="text-6xl font-black uppercase text-[#7c3aed] mb-8">UPLOAD MEDIA</h1>
-              
-              <div className="grid grid-cols-3 gap-4 mb-8">
-                <div 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="aspect-square bg-zinc-950 rounded-3xl border-4 border-dashed border-[#7c3aed] flex flex-col items-center justify-center cursor-pointer hover:bg-[#7c3aed]/10 transition"
-                >
-                  <Upload size={64} className="text-[#7c3aed] mb-4"/>
-                  <p className="text-xl font-black text-white">UPLOAD</p>
-                  <p className="text-zinc-500 text-sm mt-2">Browse Files</p>
-                </div>
-
-                <div 
-                  onClick={async () => {
-                    try {
-                      const text = await navigator.clipboard.readText();
-                      if (text.startsWith('data:') || text.startsWith('http')) {
-                        const newAsset = {
-                          id: Date.now(),
-                          name: `pasted-${Date.now()}.${text.includes('video') ? 'mp4' : text.includes('audio') ? 'mp3' : 'png'}`,
-                          type: text.includes('video') ? 'video' : text.includes('audio') ? 'audio' : 'image',
-                          size: '0 MB',
-                          url: text,
-                          timestamp: new Date().toISOString()
-                        };
-                        setMediaLibrary(prev => [...prev, newAsset]);
-                      } else {
-                        alert('📋 Paste a valid image/video/audio URL or data URL');
-                      }
-                    } catch (err) {
-                      alert('❌ Clipboard access denied. Please allow clipboard permissions.');
-                    }
-                  }}
-                  className="aspect-square bg-zinc-950 rounded-3xl border-4 border-dashed border-[#7c3aed] flex flex-col items-center justify-center cursor-pointer hover:bg-[#7c3aed]/10 transition"
-                >
-                  <Layers size={64} className="text-[#7c3aed] mb-4"/>
-                  <p className="text-xl font-black text-white">PASTE</p>
-                  <p className="text-zinc-500 text-sm mt-2">From Clipboard</p>
-                </div>
-
-                <div 
-                  onClick={() => setPage(4)}
-                  className="aspect-square bg-zinc-950 rounded-3xl border-4 border-dashed border-[#7c3aed] flex flex-col items-center justify-center cursor-pointer hover:bg-[#7c3aed]/10 transition"
-                >
-                  <Sparkles size={64} className="text-[#7c3aed] mb-4"/>
-                  <p className="text-xl font-black text-white">CREATE</p>
-                  <p className="text-zinc-500 text-sm mt-2">AI Tools</p>
-                </div>
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className="aspect-video bg-zinc-950 rounded-3xl border-4 border-dashed border-[#7c3aed] mb-8 flex flex-col items-center justify-center cursor-pointer hover:bg-[#7c3aed]/10 transition"
+              >
+                <Upload size={100} className="text-[#7c3aed] mb-4"/>
+                <p className="text-2xl font-bold text-white">Click to Browse Files</p>
+                <p className="text-zinc-400 mt-2">or drag and drop here</p>
               </div>
-
               <div className="grid grid-cols-3 gap-4 text-left">
-                <div className="bg-zinc-950 border-2 border-[#7c3aed] p-4 rounded-xl">
+                <div className="bg-zinc-950 border border-[#7c3aed] p-4 rounded-xl">
                   <FileVideo size={32} className="text-[#7c3aed] mb-2"/>
                   <p className="text-sm font-bold text-white">Videos</p>
                   <p className="text-xs text-zinc-500">MP4, MOV, AVI</p>
                 </div>
-                <div className="bg-zinc-950 border-2 border-[#7c3aed] p-4 rounded-xl">
+                <div className="bg-zinc-950 border border-[#7c3aed] p-4 rounded-xl">
                   <Music size={32} className="text-[#7c3aed] mb-2"/>
                   <p className="text-sm font-bold text-white">Audio</p>
                   <p className="text-xs text-zinc-500">MP3, WAV, AAC</p>
                 </div>
-                <div className="bg-zinc-950 border-2 border-[#7c3aed] p-4 rounded-xl">
+                <div className="bg-zinc-950 border border-[#7c3aed] p-4 rounded-xl">
                   <Eye size={32} className="text-[#7c3aed] mb-2"/>
                   <p className="text-sm font-bold text-white">Images</p>
                   <p className="text-xs text-zinc-500">JPG, PNG, GIF</p>
@@ -1186,10 +1145,13 @@ export default function App() {
           <div className="min-h-screen p-8 pt-20 pb-40">
             <div className="max-w-6xl mx-auto">
               
+              <div className="mb-16">
+                <video autoPlay loop muted playsInline className="w-full rounded-3xl border-4 border-[#7c3aed] shadow-2xl">
+                  <source src="/ThatsAllFolks.mp4" type="video/mp4"/></video>
+              </div>
               <div className="mb-8">
-                <audio autoPlay loop className="w-full">
-                  <source src="/ThatsAllFolks.mp3" type="audio/mpeg"/>
-                </audio>
+                <audio autoPlay loop className="w-full"><source src="/ThatsAllFolks.mp3" type="audio/mpeg"/></audio>
+                </video>
               </div>
 
               <h1 className="text-9xl font-black text-[#7c3aed] uppercase text-center mb-16 leading-none">THAT'S ALL FOLKS!</h1>
