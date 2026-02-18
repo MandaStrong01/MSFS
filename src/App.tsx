@@ -598,3 +598,122 @@ export default function App() {
                           🤖 AI Generated
                         </div>
                       )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex-1 p-8 overflow-y-auto">
+              <h3 className="text-3xl font-black uppercase mb-6 text-white flex items-center gap-3">
+                <Film size={32} className="text-[#7c3aed]"/>
+                TIMELINE
+              </h3>
+              <div className="space-y-4">
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => {
+                    if (draggedItem && draggedItem.type === 'video') {
+                      setTimeline(prev => ({...prev, video: [...prev.video, draggedItem]}));
+                    }
+                  }}
+                  className="bg-zinc-900 border-2 border-[#7c3aed] rounded-xl p-6 min-h-[120px]"
+                >
+                  <h4 className="text-sm font-black uppercase mb-4 text-white">VIDEO TRACK</h4>
+                  <div className="flex gap-2 flex-wrap">
+                    {timeline.video.map((item, idx) => (
+                      <div key={idx} className="bg-[#7c3aed] px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2">
+                        <span>{item.name}</span>
+                        <button onClick={() => setTimeline(prev => ({...prev, video: prev.video.filter((_, i) => i !== idx)}))} className="hover:text-red-400">
+                          <X size={14}/>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => {
+                    if (draggedItem && draggedItem.type === 'audio') {
+                      setTimeline(prev => ({...prev, audio: [...prev.audio, draggedItem]}));
+                    }
+                  }}
+                  className="bg-zinc-900 border-2 border-[#7c3aed] rounded-xl p-6 min-h-[120px]"
+                >
+                  <h4 className="text-sm font-black uppercase mb-4 text-white">AUDIO TRACK</h4>
+                  <div className="flex gap-2 flex-wrap">
+                    {timeline.audio.map((item, idx) => (
+                      <div key={idx} className="bg-[#7c3aed] px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2">
+                        <span>{item.name}</span>
+                        <button onClick={() => setTimeline(prev => ({...prev, audio: prev.audio.filter((_, i) => i !== idx)}))} className="hover:text-red-400">
+                          <X size={14}/>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PAGE 13 - THANK YOU */}
+        {page === 13 && (
+          <div className="min-h-screen p-8 pt-20 pb-40">
+            <div className="max-w-6xl mx-auto">
+              <div className="mb-16">
+                <video autoPlay loop muted playsInline className="w-full rounded-3xl border-4 border-[#7c3aed] shadow-2xl">
+                  <source src="/ThatsAllFolks.mp4" type="video/mp4"/>
+                </video>
+              </div>
+              <div className="mb-8">
+                <audio autoPlay loop className="w-full">
+                  <source src="/ThatsAllFolks.mp3" type="audio/mpeg"/>
+                </audio>
+              </div>
+
+              <h1 className="text-9xl font-black text-[#7c3aed] uppercase text-center mb-16 leading-none">THAT'S ALL FOLKS!</h1>
+
+              <div className="bg-gradient-to-br from-[#7c3aed]/20 to-[#6d28d9]/10 border-4 border-[#7c3aed] rounded-3xl p-12 mb-12">
+                <h2 className="text-4xl font-black mb-8 text-white text-center">A SPECIAL THANK YOU</h2>
+                <div className="text-lg text-white leading-relaxed space-y-6">
+                  <p className="italic font-bold text-[#7c3aed] text-2xl">Dear Creator,</p>
+                  <p>Thank you for choosing MandaStrong Studio. This journey is more than video creation; it's about the <strong>social impact</strong> your stories will have.</p>
+                  <p>Our mission: aid schools in <strong>bullying prevention</strong> and <strong>social skills development</strong>. Your films have the power to educate, inspire, and bring awareness to critical issues.</p>
+                  <p>Thank you for being part of this mission to cultivate humanity in our communities.</p>
+                </div>
+              </div>
+
+              <div className="bg-zinc-950 border-4 border-[#7c3aed] rounded-3xl p-12 text-center mb-12">
+                <BookOpen size={80} className="mx-auto text-[#7c3aed] mb-8"/>
+                <h3 className="text-4xl font-black text-white uppercase mb-6">HOW TO USE GUIDE</h3>
+                <p className="text-zinc-400 font-bold text-xl uppercase mb-8">Complete Instructional Manual</p>
+                <button className="px-16 py-6 bg-[#7c3aed] text-white rounded-full font-black text-2xl shadow-2xl hover:bg-[#6d28d9] transition">
+                  📥 DOWNLOAD GUIDE
+                </button>
+              </div>
+
+              <div className="bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] rounded-3xl p-12 text-center mb-16">
+                <h3 className="text-4xl font-black mb-6">SUPPORT VETERANS MENTAL HEALTH</h3>
+                <p className="text-2xl mb-8 font-bold">100% of Etsy Proceeds Benefit Veterans Mental Health Services</p>
+                <a href="https://MandaStrong1.Etsy.com" target="_blank" rel="noopener noreferrer" className="inline-block px-16 py-6 bg-white text-[#7c3aed] rounded-full font-black text-2xl shadow-2xl hover:scale-105 transition">
+                  🛍 VISIT ETSY STORE
+                </a>
+              </div>
+
+              <div className="flex gap-8 justify-center">
+                <button onClick={() => setPage(1)} className="px-20 py-8 bg-white text-black rounded-full font-black uppercase text-3xl hover:scale-105 transition shadow-2xl">
+                  🏠 HOME
+                </button>
+                <button onClick={() => window.close()} className="px-20 py-8 bg-red-600 text-white rounded-full font-black uppercase text-3xl hover:scale-105 transition shadow-2xl">
+                  ✕ CLOSE APP
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
