@@ -387,16 +387,47 @@ export default function App() {
                 <h2 className="text-3xl font-black uppercase text-white">{selectedTool}</h2>
                 <button onClick={() => {setSelectedTool(null);setAiPrompt('');}} className="text-white hover:text-red-500 transition"><X size={32}/></button>
               </div>
+              
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <button onClick={() => fileInputRef.current?.click()} className="aspect-square bg-zinc-900 border-2 border-[#7c3aed] rounded-2xl flex flex-col items-center justify-center hover:bg-[#7c3aed]/20 transition">
+                  <Upload size={48} className="text-[#7c3aed] mb-2"/>
+                  <p className="font-black text-white text-sm">UPLOAD</p>
+                  <p className="text-zinc-500 text-xs">Browse Files</p>
+                </button>
+
+                <button onClick={async () => {
+                  try {
+                    const text = await navigator.clipboard.readText();
+                    if (text.startsWith('data:') || text.startsWith('http')) {
+                      setMediaLibrary(prev => [...prev, {
+                        id: Date.now(),
+                        name: `pasted-${Date.now()}.${text.includes('video') ? 'mp4' : text.includes('audio') ? 'mp3' : 'png'}`,
+                        type: text.includes('video') ? 'video' : text.includes('audio') ? 'audio' : 'image',
+                        size: '0 MB',
+                        url: text,
+                        timestamp: new Date().toISOString()
+                      }]);
+                      setSelectedTool(null);
+                    } else {
+                      alert('📋 Paste a valid URL');
+                    }
+                  } catch {
+                    alert('❌ Clipboard access denied');
+                  }
+                }} className="aspect-square bg-zinc-900 border-2 border-[#7c3aed] rounded-2xl flex flex-col items-center justify-center hover:bg-[#7c3aed]/20 transition">
+                  <Layers size={48} className="text-[#7c3aed] mb-2"/>
+                  <p className="font-black text-white text-sm">PASTE</p>
+                  <p className="text-zinc-500 text-xs">From Clipboard</p>
+                </button>
+
+                <button onClick={() => {}} className="aspect-square bg-zinc-900 border-2 border-[#7c3aed] rounded-2xl flex flex-col items-center justify-center cursor-default opacity-50">
+                  <Sparkles size={48} className="text-[#7c3aed] mb-2"/>
+                  <p className="font-black text-white text-sm">GENERATE</p>
+                  <p className="text-zinc-500 text-xs">AI Create</p>
+                </button>
+              </div>
+
               <div className="space-y-6">
-                <div className="bg-black border border-[#7c3aed]/30 rounded-xl p-6">
-                  <h3 className="font-bold mb-4 text-white flex items-center gap-2">
-                    <Upload size={20} className="text-[#7c3aed]"/>
-                    Upload Existing Media
-                  </h3>
-                  <button onClick={() => fileInputRef.current?.click()} className="w-full bg-zinc-900 border-2 border-[#7c3aed] p-4 rounded-lg text-white hover:bg-[#7c3aed]/20 transition font-bold">
-                    📁 BROWSE FILES
-                  </button>
-                </div>
                 <div className="bg-black border border-[#7c3aed]/30 rounded-xl p-6">
                   <h3 className="font-bold mb-4 text-white flex items-center gap-2">
                     <Sparkles size={20} className="text-[#7c3aed]"/>
@@ -1150,7 +1181,10 @@ export default function App() {
                   <source src="/ThatsAllFolks.mp4" type="video/mp4"/></video>
               </div>
               <div className="mb-8">
-                <audio autoPlay loop className="w-full"><source src="/ThatsAllFolks.mp3" type="audio/mpeg"/></audio>
+                <audio autoPlay loop className="w-full">
+                  <source src="/ThatsAllFolks.mp3" type="audio/mpeg"/>
+                </audio>
+                <p className="text-center text-zinc-500 text-sm mt-2">♪ Playing ThatsAllFolks.mp3 ♪</p>
               </div>
 
               <h1 className="text-9xl font-black text-[#7c3aed] uppercase text-center mb-16 leading-none">THAT'S ALL FOLKS!</h1>
