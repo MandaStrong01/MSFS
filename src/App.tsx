@@ -330,6 +330,68 @@ export default function App() {
           </div>
         )}
 
+        {/* PAGE 18 - TERMS OF SERVICE */}
+        {page === 18 && (
+          <div className="min-h-screen p-8 pt-20 pb-40 max-w-5xl mx-auto overflow-y-auto scrollbar">
+            <h1 className="text-5xl font-black uppercase mb-12 text-white text-center">TERMS OF SERVICE & DISCLAIMER</h1>
+            <div className="bg-[#7c3aed] rounded-3xl p-10 text-center mb-10">
+              <Shield size={64} className="mx-auto mb-4"/>
+              <h2 className="text-3xl font-black mb-2">Legal Agreement</h2>
+              <p className="text-white/90">Last updated: February 2026 • Effective immediately</p>
+            </div>
+            {[
+              {title:'1. ACCEPTANCE OF TERMS',content:'By accessing, browsing, or using MandaStrong Studio ("Service"), you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. If you do not agree, you must not access or use the Service. Your continued use constitutes ongoing acceptance.'},
+              
+              {title:'2. SERVICE DESCRIPTION',content:'MandaStrong Studio provides an AI-powered video creation platform featuring 799+ artificial intelligence generation tools, media upload capabilities, multi-track editing, professional enhancement features, and export functionality supporting resolutions up to 8K. Features may vary by subscription tier.'},
+              
+              {title:'3. USER ACCOUNTS & REGISTRATION',content:'You must create an account to access certain features. You are responsible for maintaining confidentiality of your credentials and all activities under your account. You must provide accurate information and be at least 18 years old or have parental consent. We reserve the right to suspend or terminate accounts violating these Terms.'},
+              
+              {title:'4. USER CONTENT & INTELLECTUAL PROPERTY',content:'You retain all ownership rights to content you create ("User Content"). By posting to Community Hub, you grant MandaStrong a non-exclusive, worldwide, royalty-free license to display your content solely for operating the Service. You represent that you own or have necessary rights to all User Content.'},
+              
+              {title:'5. PROHIBITED CONDUCT',content:'You agree not to: (a) create illegal, harmful, threatening, abusive, harassing, or defamatory content; (b) infringe intellectual property rights; (c) impersonate others; (d) interfere with or disrupt the Service; (e) attempt unauthorized access; (f) distribute malware; (g) harvest user data; (h) violate applicable laws.'},
+              
+              {title:'6. SUBSCRIPTIONS, BILLING & PAYMENTS',content:'Subscriptions auto-renew monthly. You authorize charging your payment method each billing cycle. Cancel anytime through account settings, effective at end of current period. Refunds provided at our discretion within 14 days of initial purchase only. Stripe processes all payments. Price changes take effect next billing cycle with 30 days notice.'},
+              
+              {title:'7. PRIVACY & DATA PROTECTION',content:'We collect minimal data necessary for service operation including account information, usage data, uploaded content, and payment information. All data is encrypted in transit and at rest. We implement industry-standard security. We do not sell personal information. You may request data access, correction, or deletion. See Privacy Policy for details.'},
+              
+              {title:'8. INTELLECTUAL PROPERTY RIGHTS',content:'The Service, including software, branding, designs, and content (excluding User Content) is owned by MandaStrong Studio and protected by intellectual property laws. You receive a limited, non-exclusive license to use the Service. AI-generated content ownership transfers to users upon creation. Report copyright concerns to legal@mandastrong.com.'},
+              
+              {title:'9. DISCLAIMERS & WARRANTIES',content:'THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR PURPOSE, NON-INFRINGEMENT, OR COURSE OF PERFORMANCE. We do not guarantee uninterrupted, secure, or error-free service. AI-generated content quality varies. You use at your own risk.'},
+              
+              {title:'10. LIMITATION OF LIABILITY',content:'TO THE MAXIMUM EXTENT PERMITTED BY LAW, MANDASTRONG SHALL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOST PROFITS, DATA LOSS, OR SERVICE INTERRUPTION. TOTAL LIABILITY SHALL NOT EXCEED SUBSCRIPTION FEES PAID DURING THE 12 MONTHS PRECEDING THE CLAIM.'},
+              
+              {title:'11. INDEMNIFICATION',content:'You agree to indemnify, defend, and hold harmless MandaStrong Studio, its officers, directors, employees from any claims, damages, losses, liabilities, and expenses (including attorneys fees) arising from: (a) your use of the Service; (b) your User Content; (c) violation of these Terms; (d) violation of any rights or laws.'},
+              
+              {title:'12. TERMINATION & SUSPENSION',content:'We may suspend or terminate your account immediately without notice for Terms violations, fraudulent activity, or security risks. You may terminate anytime through account settings. Upon termination: access ceases immediately; you remain liable for charges incurred; we may delete User Content per retention policy unless legally required to retain it.'},
+              
+              {title:'13. DISPUTE RESOLUTION & ARBITRATION',content:'Disputes shall be resolved through binding arbitration per American Arbitration Association rules, not in court. Arbitration is individual basis; CLASS ACTION WAIVER applies. Before filing, attempt informal resolution by contacting support@mandastrong.com with detailed description. If not resolved within 30 days, either party may initiate arbitration.'},
+              
+              {title:'14. GOVERNING LAW & JURISDICTION',content:'These Terms are governed by laws of the jurisdiction where MandaStrong Studio is incorporated, without regard to conflict of law principles. Disputes not subject to arbitration shall be brought in courts of that jurisdiction. If any provision is unenforceable, it shall be modified minimally; remaining provisions remain in effect.'},
+              
+              {title:'15. MODIFICATIONS TO TERMS',content:'We reserve the right to modify these Terms at any time. Material changes notified via email or Service notification 30 days before taking effect. Continued use after changes constitutes acceptance. If you disagree, stop using the Service and may terminate your account. Review Terms periodically.'},
+              
+              {title:'16. THIRD-PARTY SERVICES',content:'The Service may contain links to or integrate with third-party services (e.g., Stripe for payments, Supabase for storage). We are not responsible for third-party content, policies, or practices. Your use of third-party services is subject to their terms. We do not endorse third-party services.'},
+              
+              {title:'17. FORCE MAJEURE',content:'We are not liable for failure to perform due to circumstances beyond reasonable control, including natural disasters, war, terrorism, riots, embargoes, acts of authorities, fire, floods, accidents, pandemics, strikes, or shortages of transportation, facilities, fuel, energy, labor, or materials.'},
+              
+              {title:'18. ENTIRE AGREEMENT',content:'These Terms, together with our Privacy Policy and legal notices, constitute the entire agreement between you and MandaStrong Studio concerning the Service and supersede all prior agreements, representations, and understandings.'},
+              
+              {title:'19. CONTACT INFORMATION',content:'For questions about these Terms: legal@mandastrong.com or support@mandastrong.com. For payment disputes: billing@mandastrong.com. For privacy concerns: privacy@mandastrong.com. Mailing address available upon request.'},
+              
+              {title:'20. ACKNOWLEDGMENT',content:'BY CLICKING "ACCEPT," CREATING AN ACCOUNT, OR USING THE SERVICE, YOU ACKNOWLEDGE THAT YOU HAVE READ, UNDERSTOOD, AND AGREE TO BE BOUND BY THESE TERMS OF SERVICE AND ALL POLICIES REFERENCED HEREIN.'}
+            ].map(section => (
+              <div key={section.title} className="bg-zinc-950 border-2 border-zinc-800 rounded-2xl p-6 mb-4">
+                <h3 className="text-lg font-black text-[#7c3aed] mb-3">{section.title}</h3>
+                <p className="text-zinc-300 leading-relaxed text-sm">{section.content}</p>
+              </div>
+            ))}
+            <div className="flex gap-4 mt-8">
+              <button onClick={() => setPage(1)} className="flex-1 bg-zinc-800 py-5 rounded-2xl font-black uppercase hover:bg-zinc-700 transition">DECLINE</button>
+              <button onClick={() => setPage(4)} className="flex-1 bg-[#7c3aed] py-5 rounded-2xl font-black uppercase hover:bg-[#6d28d9] transition">✅ ACCEPT & CONTINUE</button>
+            </div>
+          </div>
+        )}
+
         {/* PAGE 11 - EDITOR SUITE WITH DURATION SLIDER */}
         {page === 11 && (
           <div className="min-h-screen p-8 pt-20 pb-40">
@@ -374,14 +436,31 @@ export default function App() {
 
         {/* PAGE 21 - THANK YOU */}
         {page === 21 && (
-          <div className="min-h-screen p-8 pt-20 pb-40 max-w-6xl mx-auto">
-            <div className="mb-12">
-              <audio autoPlay loop className="w-full">
-                <source src="/ThatsAllFolks.mp3" type="audio/mpeg"/>
-              </audio>
-              <p className="text-center text-zinc-500 text-sm mt-2">♪ Playing ThatsAllFolks.mp3 ♪</p>
+          <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-b from-black via-[#7c3aed]/10 to-black">
+            {/* HEADING - HALF SIZE */}
+            <h1 className="text-6xl md:text-7xl font-black text-[#7c3aed] uppercase text-center mb-8 leading-tight drop-shadow-2xl">
+              THAT'S ALL FOLKS!
+            </h1>
+            
+            {/* VIDEO UNDERNEATH */}
+            <div className="w-full max-w-5xl mb-8">
+              <video autoPlay loop muted playsInline className="w-full rounded-3xl border-4 border-[#7c3aed] shadow-2xl">
+                <source src="/ThatsAllFolks.mp4" type="video/mp4"/>
+              </video>
             </div>
-            <h1 className="text-9xl font-black text-[#7c3aed] uppercase text-center mb-16">THAT'S ALL<br/>FOLKS!</h1>
+
+            {/* AUDIO PLAYER (HIDDEN) */}
+            <audio autoPlay loop>
+              <source src="/ThatsAllFolks.mp3" type="audio/mpeg"/>
+            </audio>
+            
+            <p className="text-zinc-500 text-sm mt-4">♪ Audio & Video Playing ♪</p>
+            
+            {/* THANK YOU MESSAGE */}
+            <div className="mt-12 max-w-3xl text-center">
+              <p className="text-2xl text-white font-bold mb-4">Thank You For Using MandaStrong Studio!</p>
+              <p className="text-zinc-400 text-lg">Your movie has been created. Share it with the world! 🎬</p>
+            </div>
           </div>
         )}
 
