@@ -14,6 +14,7 @@ const ENHANCEMENT_TOOLS = ["AI 8K Upscaling","Cinematic Grain","Motion Stabiliza
 export default function App() {
   const [page, setPage] = useState(1);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [toolSearch, setToolSearch] = useState('');
   const [duration, setDuration] = useState(90);
   const [selectedTool, setSelectedTool] = useState(null);
   const [selectedEnhancement, setSelectedEnhancement] = useState(null);
@@ -275,7 +276,7 @@ export default function App() {
           <div className="h-screen flex flex-col justify-center items-center text-center px-6">
             <Sparkles size={64} className="text-[#7c3aed] mb-8 animate-pulse"/>
             <h1 className="text-7xl md:text-9xl font-black text-[#7c3aed] uppercase mb-6">MANDASTRONG STUDIO</h1>
-            <p className="text-xl md:text-2xl font-bold text-[#7c3aed] max-w-3xl mb-16">Welcome To An All In One Make Your Own Longer Movies!</p>
+            <p className="text-xl md:text-2xl font-bold text-[#7c3aed] max-w-3xl mb-16">Welcome To The All In One Make Your Own Longer Movies App!</p>
             <button onClick={() => setPage(2)} className="bg-[#7c3aed] text-white px-16 py-4 rounded-full font-black uppercase text-xl hover:scale-105 transition shadow-2xl">START CREATING</button>
           </div>
         )}
@@ -331,11 +332,26 @@ export default function App() {
         {/* PAGES 4-9: AI TOOL BOARDS */}
         {(page >= 4 && page <= 9) && (() => {
           const boards = ["Writing","Voice","Image","Video","Motion","Image"];
-          const tools = AI_TOOLS[boards[page-4]] || [];
+          const allTools = AI_TOOLS[boards[page-4]] || [];
+          const tools = toolSearch ? allTools.filter(t => t.toLowerCase().includes(toolSearch.toLowerCase())) : allTools;
           return (
             <div className="h-screen flex flex-col pt-20 pb-40">
-              <h2 className="text-5xl font-black uppercase text-[#7c3aed] text-center mb-2">AI TOOL BOARD</h2>
-              <p className="text-center text-zinc-400 mb-6">{boards[page-4]} Category • {tools.length} Tools Available</p>
+              <h2 className="text-5xl font-black uppercase text-[#7c3aed] text-center mb-6">AI TOOL BOARD</h2>
+              
+              {/* SEARCH BAR */}
+              <div className="px-8 mb-6">
+                <div className="relative max-w-xl">
+                  <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7c3aed]"/>
+                  <input 
+                    value={toolSearch} 
+                    onChange={e => setToolSearch(e.target.value)} 
+                    placeholder="🔍 Search Tools..." 
+                    className="w-full bg-zinc-900 border-2 border-[#7c3aed] pl-12 pr-10 py-4 rounded-xl text-white outline-none text-lg font-bold"
+                  />
+                  {toolSearch && <button onClick={() => setToolSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"><X size={20}/></button>}
+                </div>
+              </div>
+
               <div className="flex-1 overflow-y-auto px-8 scrollbar">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-8">
                   {tools.map((tool,i) => (
@@ -358,16 +374,43 @@ export default function App() {
                 <h2 className="text-3xl font-black uppercase text-white">{selectedTool}</h2>
                 <button onClick={() => {setSelectedTool(null);setAiPrompt('');}} className="text-white hover:text-red-500 transition"><X size={32}/></button>
               </div>
-              <div className="space-y-6">
-                <div className="bg-black border border-[#7c3aed]/30 rounded-xl p-6">
-                  <h3 className="font-bold mb-4 text-white flex items-center gap-2">
-                    <Upload size={20} className="text-[#7c3aed]"/>
-                    Upload Existing Media
-                  </h3>
-                  <button onClick={() => fileInputRef.current?.click()} className="w-full bg-zinc-900 border-2 border-[#7c3aed] p-4 rounded-lg text-white hover:bg-[#7c3aed]/20 transition font-bold">
-                    📁 BROWSE FILES
-                  </button>
+              
+              {/* 3 BUTTONS: UPLOAD, PASTE, GENERATE */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <button onClick={() => fileInputRef.current?.click()} className="aspect-square bg-zinc-900 border-2 border-[#7c3aed] rounded-2xl flex flex-col items-center justify-center hover:bg-[#7c3aed]/20 transition">
+                  <Upload size={40} className="text-[#7c3aed] mb-2"/>
+                  <p className="font-black text-white text-sm">UPLOAD</p>
+                </button>
+
+                <button onClick={async () => {
+                  try {
+                    const text = await navigator.clipboard.readText();
+                    if (text.startsWith('data:') || text.startsWith('http')) {
+                      setMediaLibrary(prev => [...prev, {
+                        id: Date.now(),
+                        name: `pasted-${Date.now()}.mp4`,
+                        type: 'video',
+                        size: '0 MB',
+                        url: text,
+                        timestamp: new Date().toISOString()
+                      }]);
+                      setSelectedTool(null);
+                    } else alert('📋 Paste a valid URL');
+                  } catch {
+                    alert('❌ Clipboard access denied');
+                  }
+                }} className="aspect-square bg-zinc-900 border-2 border-[#7c3aed] rounded-2xl flex flex-col items-center justify-center hover:bg-[#7c3aed]/20 transition">
+                  <Layers size={40} className="text-[#7c3aed] mb-2"/>
+                  <p className="font-black text-white text-sm">PASTE</p>
+                </button>
+
+                <div className="aspect-square bg-zinc-900 border-2 border-[#7c3aed] rounded-2xl flex flex-col items-center justify-center">
+                  <Sparkles size={40} className="text-[#7c3aed] mb-2"/>
+                  <p className="font-black text-white text-sm">GENERATE</p>
                 </div>
+              </div>
+
+              <div className="space-y-6">
                 <div className="bg-black border border-[#7c3aed]/30 rounded-xl p-6">
                   <h3 className="font-bold mb-4 text-white flex items-center gap-2">
                     <Sparkles size={20} className="text-[#7c3aed]"/>
@@ -539,7 +582,7 @@ export default function App() {
                         </div>
                       )}
                       {asset.enhanced && (
-                        <div className="text-xs bg-green-600 text-white px-2 py-1 rounded inline-block mt-2">
+                        <div className="text-xs bg-[#7c3aed] text-white px-2 py-1 rounded inline-block mt-2">
                           ✨ Enhanced
                         </div>
                       )}
@@ -760,7 +803,7 @@ export default function App() {
                   <Play size={24}/>
                   PLAY PREVIEW
                 </button>
-                <button onClick={handleRender} className="bg-green-600 px-12 py-4 rounded-xl font-black uppercase flex items-center gap-3 hover:bg-green-700 transition">
+                <button onClick={handleRender} className="bg-[#7c3aed] px-12 py-4 rounded-xl font-black uppercase flex items-center gap-3 hover:bg-[#6d28d9] transition">
                   <Zap size={24}/>
                   START RENDER
                 </button>
@@ -848,7 +891,7 @@ export default function App() {
                 </button>
                 <button 
                   disabled={!currentVideo}
-                  className="bg-green-600 py-6 rounded-xl font-black uppercase text-xl hover:bg-green-700 transition disabled:opacity-50 flex items-center justify-center gap-3"
+                  className="bg-[#7c3aed] py-6 rounded-xl font-black uppercase text-xl hover:bg-[#6d28d9] transition disabled:opacity-50 flex items-center justify-center gap-3"
                 >
                   <Save size={24}/>
                   SAVE TO CLOUD
@@ -1018,7 +1061,7 @@ export default function App() {
                     {['File Upload','AI Generation','Timeline Editor','Enhancement Tools','Audio Mixer','Render Engine'].map(s => (
                       <div key={s} className="flex justify-between items-center bg-black/50 p-4 rounded-xl">
                         <span className="font-bold text-white">{s}</span>
-                        <span className="text-green-400 flex items-center gap-2 font-bold">● Operational</span>
+                        <span className="text-[#a78bfa] flex items-center gap-2 font-bold">● Operational</span>
                       </div>
                     ))}
                   </div>
