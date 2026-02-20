@@ -6,8 +6,7 @@ const AI_TOOLS = {
   Voice: ["Voice Maker","Voice Cloner","Voice Creator","Voice Recorder","Speech Converter","Voice Builder","Voice Generator","Premium Voice","Emotion Voice","Natural Voice","Narrator","Voice Imitator","Accent Generator","Pitch Controller","Tone Adjuster","Lip Sync","Voice Coach","Audiobook","Commercial Voice","Trailer Voice","Documentary","News Anchor","Radio DJ","Sports Cast","Game Show","Meditation","Hypnosis","ASMR Creator","Whisper Gen","Shout Creator","Scream Gen","Laugh Creator","Cry Gen","Sigh Creator","Gasp Gen","Cough Creator","Throat Clear","Warm-up Tool","Range Finder","Pitch Train","Articulation","Diction Drill","Health Monitor","Strain Detect","Rest Reminder","Hydration","Posture Guide","Breathing","Vocal Workout","Range Expand","Stamina Build","Endurance Train","Quality Enhance","Clarity Boost","Richness Amp","Warmth Add","Brightness","Darkness Mix","Raspy Tool","Smooth Filter","Texture Design","Timbre Mod","Resonance Tune","Projection","Volume Expand","Dynamic Range","Compression","EQ Voice","De-esser","Pop Filter","Noise Gate","Reverb Voice","Echo Voice","Delay Voice","Chorus FX","Flanger FX","Phaser FX","Distortion","Bitcrush","Lo-fi Voice","Radio Effect","Phone Effect","Megaphone","Robot Voice","Alien Voice","Monster Voice","Demon Voice","Angel Voice","Chipmunk","Deep Voice","High Voice","Child Voice","Elderly Voice","Speed Modifier","Volume Normal","Breath Control","Pause Insert","Emphasis Tool","Inflection","Pronunciation","Mouth Shape","Emotion Mixer","Mood Select","Voice Bank","Profile Saver","Multi-Voice","Dialogue Mix","Conversation","Interview","Podcast Voice"],
   Image: ["Image Generator","Asset Architect","Texture Mapper","VFX Synthesis","Matte Logic","Color Palette","Background Gen","Character Design","Lighting Designer","Scene Composite","Photo Enhance","Image Upscale","Style Transfer","Text to Image","Color Grading","Tone Mapper","Film Grain","Bokeh Gen","Sky Replace","Cloud Gen","Prop Creator","Depth Map","Normal Map","Albedo Map","Roughness Map","Metallic Map","Emission Map","Ambient Occlude","Shadow Gen","Highlight","Rim Light","Fill Light","Key Light","3-Point Light","Studio Light","Natural Light","Golden Hour","Blue Hour","Night Scene","Day Scene","Sunrise FX","Sunset FX","Moonlight","Starlight","Fire Light","Candle Light","Neon Light","LED Effect","LUT Creator","Contrast Adjust","Brightness","Saturation","Hue Shift","Temperature","Tint Control","Exposure Fix","HDR Merge","Panorama Stitch","360 Image","Fisheye Fix","Lens Distort","Chromatic Aberr","Vignette","Noise Add","Scratch Add","Dust Particles","Light Leaks","Depth Field","Motion Blur","Radial Blur","Zoom Blur","Gaussian Blur","Smart Blur","Sharpen","Edge Enhance","Detail Boost","Clarity","Structure","Dehaze","Weather FX","Rain Creator","Snow Effect","Fog Gen","Mist Tool","Haze Creator","Smoke FX","Steam Gen","Fire Creator","Explosion","Spark Gen","Lightning","Aurora FX","Rainbow","Lens Flare","God Rays","Volumetric","Caustics"],
   Video: ["Motion Video Maker","Video Creator","Avatar Generator","Video Synthesizer","Video Studio","Image to Motion","Dynamic Pan","Tilt Shot","Tracking Shot","Crane Movement","Steadycam","Shot Transition","Close-up","Wide Shot","POV Shot","Zoom In","Dolly In","Time Lapse","Slow Motion","Speed Ramp","Flow Gen","Video Craft","Style Tool","Temporal Flow","Frame Blend","Track Shot","Crane Move","Handheld FX","Shot Transit","Establish Shot","Medium Shot","Over Shoulder","Dutch Angle","Whip Pan","Swish Pan","Zoom Out","Dolly Out","Truck Left","Truck Right","Pedestal Up","Pedestal Down","Arc Shot","Orbit Shot","Boom Up","Boom Down","Jib Shot","Drone Shot","Aerial View","Birds Eye","Ground Level","Low Angle","High Angle","Eye Level","Worms Eye","Canted Frame","Symmetry","Rule Thirds","Golden Ratio","Leading Lines","Frame Frame","Negative Space","Depth Layers"],
-  Motion: ["Motion Tracker","Mocap Logic","Physics Engine","Cloth Dynamics","Skeleton Animator","Facial Rigging","Body Movement","Camera Tracker","Particle System","Fluid Dynamics","Spring System","Keyframe Tool","Graph Editor","Timeline Editor","Ease In","Ease Out","Bounce Effect","Elastic Motion","Anticipation","Follow Through","Tracker Pro","Object Physics","Gravity Sim","Collision Detect","Soft Body","Rigid Body","Particle Sys","Fluid Dynamic","Smoke Sim","Fire Dynamic","Water Physics","Wind Effect","Force Field","Turbulence","Vortex","Attraction","Repulsion","Gravity Well","Rope Physics","Chain Dynamic","Hair Sim","Fur Dynamic","Cloth Drape","Flag Wave","Curtain Motion","Dress Physics","Cape Sim","Muscle Sys","Skin Deform"],
-  Advanced: ["3D Model Generator","Virtual Set Designer","Green Screen Composer","Rotoscope Tool","Object Removal","Sky Replacement Pro","Crowd Duplication","Time Remapping","Freeze Frame","Speed Control","Reverse Playback","Loop Creator","Seamless Transition","Morph Tool","Face Swap","Age Progression","Beauty Filter","Body Reshape","Background Blur","Depth Control","Focus Pull","Rack Focus","Tilt Shift","Miniature Effect","Zoom Burst","Spiral Effect","Mirror Effect","Kaleidoscope","Prism Effect","Light Rays","Sun Flare","Star Filter","Glow Effect","Neon Effect","Hologram","Glitch Effect","VHS Effect","Film Damage","Old Film Look","Sepia Tone","Black White","Color Pop","Selective Color","Split Tone","Cross Process","Bleach Bypass","Day for Night","Night Vision","Thermal Vision","X-Ray Effect","Cartoon Effect","Pencil Sketch","Oil Painting","Watercolor","Comic Book","Pop Art","Pixel Art","Mosaic","Pointillism","Stained Glass","Paper Cutout","Clay Animation","Stop Motion","Claymation","Puppet Animation","Cut-out Animation","Silhouette","Shadow Play","Light Painting","Double Exposure","Triple Exposure","Multiple Exposure","Blend Modes","Screen","Multiply","Overlay","Soft Light","Hard Light","Color Dodge","Color Burn","Linear Dodge","Linear Burn","Vivid Light","Linear Light","Pin Light","Hard Mix","Difference","Exclusion","Subtract","Divide","Hue Blend","Saturation Blend","Color Blend","Luminosity","Lighter Color","Darker Color","Behind Mode","Clear Mode","Dissolve","Darken","Lighten"]
+  Motion: ["Motion Tracker","Mocap Logic","Physics Engine","Cloth Dynamics","Skeleton Animator","Facial Rigging","Body Movement","Camera Tracker","Particle System","Fluid Dynamics","Spring System","Keyframe Tool","Graph Editor","Timeline Editor","Ease In","Ease Out","Bounce Effect","Elastic Motion","Anticipation","Follow Through","Tracker Pro","Object Physics","Gravity Sim","Collision Detect","Soft Body","Rigid Body","Particle Sys","Fluid Dynamic","Smoke Sim","Fire Dynamic","Water Physics","Wind Effect","Force Field","Turbulence","Vortex","Attraction","Repulsion","Gravity Well","Rope Physics","Chain Dynamic","Hair Sim","Fur Dynamic","Cloth Drape","Flag Wave","Curtain Motion","Dress Physics","Cape Sim","Muscle Sys","Skin Deform"]
 };
 
 const ENHANCEMENT_TOOLS = ["AI 8K Upscaling","Cinematic Grain","Motion Stabilization","Deep HDR Boost","Face Retouch Pro","Neural Noise Reduction","Auto Color Balance","Dynamic Range Expansion","Lens Flare Synth","Shadow Recovery","Highlight Rolloff","Skin Tone Uniformity","Optical Flow Smooth","Atmospheric Haze","Sharpen Intelligence","De-Banding Pro","Moire Removal","Color Space Transform","Anamorphic Stretch","Flicker Reduction","Low Light Clarity","Texture Enhancement","Micro-Contrast Adjust","Vignette Pro","Film Stock Emulation","Glow Synthesis","Edge Refinement","Smart Saturation","Tone Mapping Pro","Gamma Correction","Black Point Calibration","White Balance AI","Color Match Pro","Temporal Denoise","Digital Intermediate","Chromatic Correction","Film Grain Advanced","Halation Effect","Bloom Control","Light Wrap"];
@@ -232,7 +231,7 @@ export default function App() {
               <h3 className="text-lg font-black uppercase mb-4 text-[#7c3aed]">Quick Access</h3>
               {[
                 {p:1,l:"Home"},{p:2,l:"Welcome"},{p:3,l:"Login/Pricing"},{p:4,l:"Writing Tools"},{p:5,l:"Voice Tools"},
-                {p:6,l:"Image Tools"},{p:7,l:"Video Tools"},{p:8,l:"Motion Tools"},{p:9,l:"Advanced Tools"},{p:10,l:"Upload Media"},
+                {p:6,l:"Image Tools"},{p:7,l:"Video Tools"},{p:8,l:"Motion Tools"},{p:10,l:"Upload Media"},
                 {p:11,l:"Editor Suite"},{p:12,l:"Timeline & Library"},{p:13,l:"Enhancement"},{p:14,l:"Audio Mixer"},
                 {p:15,l:"Preview"},{p:16,l:"Export"},{p:17,l:"Tutorials"},{p:18,l:"Terms"},{p:19,l:"Agent Grok"},
                 {p:20,l:"Community"},{p:21,l:"Thank You"}
@@ -299,28 +298,22 @@ export default function App() {
                 <h3 className="text-3xl font-black uppercase mb-6 text-center text-white">Login</h3>
                 <input type="email" placeholder="your@email.com" className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-4 outline-none"/>
                 <input type="password" placeholder="••••••••" className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-6 outline-none"/>
-                <button onClick={() => {
-                  // Auto-login as owner with Studio plan
-                  setPage(4);
-                }} className="w-full bg-[#7c3aed] py-4 rounded-xl font-black uppercase hover:bg-[#6d28d9] transition">Login & Start</button>
+                <button onClick={() => setPage(4)} className="w-full bg-[#7c3aed] py-4 rounded-xl font-black uppercase hover:bg-[#6d28d9] transition">Login & Start</button>
               </div>
               <div className="bg-zinc-950 border-2 border-[#7c3aed] p-10 rounded-3xl">
                 <h3 className="text-3xl font-black uppercase mb-6 text-center text-white">Register</h3>
                 <input type="text" placeholder="Your Name" className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-4 outline-none"/>
                 <input type="email" placeholder="your@email.com" className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-4 outline-none"/>
-                <button onClick={() => {
-                  // Auto-register with free Studio plan access
-                  setPage(4);
-                }} className="w-full bg-[#7c3aed] py-4 rounded-xl font-black uppercase hover:bg-[#6d28d9] transition">Create Account</button>
+                <button onClick={() => setPage(4)} className="w-full bg-[#7c3aed] py-4 rounded-xl font-black uppercase hover:bg-[#6d28d9] transition">Create Account</button>
               </div>
             </div>
             <div className="max-w-6xl mx-auto">
               <h2 className="text-4xl font-black text-center mb-12 uppercase text-white">Choose Your Plan</h2>
               <div className="grid md:grid-cols-3 gap-6">
                 {[
-                  {t:'Basic',p:'20',s:'https://buy.stripe.com/test_14k00SfE88Wn5K85kk',f:['HD Export (1080p)','100 AI Tools','10GB Storage','Email Support']},
-                  {t:'Pro',p:'30',s:'https://buy.stripe.com/test_6oE00SfE8cit65G002',f:['4K Export (2160p)','300 AI Tools','100GB Storage','Priority Support','Commercial License']},
-                  {t:'Studio',p:'50',s:'https://buy.stripe.com/test_dR68wwdvZ8Wn4E43cc',f:['8K Export (4320p)','799 AI Tools','1TB Storage','24/7 Support','Full Rights','API Access']}
+                  {t:'Basic',p:'20',s:'https://buy.stripe.com/test_basic',f:['HD Export (1080p)','100 AI Tools','10GB Storage','Email Support']},
+                  {t:'Pro',p:'30',s:'https://buy.stripe.com/test_pro',f:['4K Export (2160p)','300 AI Tools','100GB Storage','Priority Support','Commercial License']},
+                  {t:'Studio',p:'50',s:'https://buy.stripe.com/test_studio',f:['8K Export (4320p)','600 AI Tools','1TB Storage','24/7 Support','Full Rights','API Access']}
                 ].map(plan => (
                   <div key={plan.t} className="bg-zinc-950 border-2 border-[#7c3aed]/30 rounded-3xl p-8 hover:border-[#7c3aed] transition">
                     <h3 className="text-2xl font-black uppercase mb-2 text-white">{plan.t}</h3>
@@ -338,7 +331,7 @@ export default function App() {
 
         {/* PAGES 4-9: AI TOOL BOARDS */}
         {(page >= 4 && page <= 9) && (() => {
-          const boards = ["Writing","Voice","Image","Video","Motion","Advanced"];
+          const boards = ["Writing","Voice","Image","Video","Motion","Image"];
           const allTools = AI_TOOLS[boards[page-4]] || [];
           const tools = toolSearch ? allTools.filter(t => t.toLowerCase().includes(toolSearch.toLowerCase())) : allTools;
           return (
@@ -404,7 +397,7 @@ export default function App() {
                       setSelectedTool(null);
                     } else alert('📋 Paste a valid URL');
                   } catch {
-                    alert('❌ Clipboard denied');
+                    alert('❌ Clipboard access denied');
                   }
                 }} className="aspect-square bg-zinc-900 border-2 border-[#7c3aed] rounded-2xl flex flex-col items-center justify-center hover:bg-[#7c3aed]/20 transition">
                   <Layers size={40} className="text-[#7c3aed] mb-2"/>
