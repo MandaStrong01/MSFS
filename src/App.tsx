@@ -311,9 +311,9 @@ export default function App() {
               <h2 className="text-4xl font-black text-center mb-12 uppercase text-white">Choose Your Plan</h2>
               <div className="grid md:grid-cols-3 gap-6">
                 {[
-                  {t:'Basic',p:'20',s:'https://buy.stripe.com/test_basic',f:['HD Export (1080p)','100 AI Tools','10GB Storage','Email Support']},
-                  {t:'Pro',p:'30',s:'https://buy.stripe.com/test_pro',f:['4K Export (2160p)','300 AI Tools','100GB Storage','Priority Support','Commercial License']},
-                  {t:'Studio',p:'50',s:'https://buy.stripe.com/test_studio',f:['8K Export (4320p)','600 AI Tools','1TB Storage','24/7 Support','Full Rights','API Access']}
+                  {t:'Basic',p:'20',s:'https://buy.stripe.com/test_14k00SfE88Wn5K85kk',f:['HD Export (1080p)','100 AI Tools','10GB Storage','Email Support']},
+                  {t:'Pro',p:'30',s:'https://buy.stripe.com/test_6oE00SfE8cit65G002',f:['4K Export (2160p)','300 AI Tools','100GB Storage','Priority Support','Commercial License']},
+                  {t:'Studio',p:'50',s:'https://buy.stripe.com/test_dR68wwdvZ8Wn4E43cc',f:['8K Export (4320p)','600 AI Tools','1TB Storage','24/7 Support','Full Rights','API Access']}
                 ].map(plan => (
                   <div key={plan.t} className="bg-zinc-950 border-2 border-[#7c3aed]/30 rounded-3xl p-8 hover:border-[#7c3aed] transition">
                     <h3 className="text-2xl font-black uppercase mb-2 text-white">{plan.t}</h3>
@@ -388,23 +388,26 @@ export default function App() {
                     if (text && text.trim()) {
                       // Accept URLs (http/https/data) OR plain text
                       const isUrl = text.startsWith('http') || text.startsWith('data:');
-                      setMediaLibrary(prev => [...prev, {
+                      const newItem = {
                         id: Date.now(),
                         name: isUrl ? `pasted-${Date.now()}.mp4` : `text-${Date.now()}.txt`,
                         type: isUrl ? 'video' : 'text',
                         size: '0 MB',
-                        url: isUrl ? text : `data:text/plain;base64,${btoa(text)}`,
-                        content: isUrl ? null : text,
+                        url: isUrl ? text : `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`,
+                        content: text,
                         timestamp: new Date().toISOString()
-                      }]);
+                      };
+                      setMediaLibrary(prev => [...prev, newItem]);
                       setSelectedTool(null);
+                      alert('✅ Pasted successfully!');
                     } else {
                       alert('📋 Clipboard is empty');
                     }
-                  } catch {
-                    alert('❌ Clipboard access denied');
+                  } catch (err) {
+                    console.error('Paste error:', err);
+                    alert('❌ Please allow clipboard access in your browser settings');
                   }
-                }} className="aspect-square bg-zinc-900 border-2 border-[#7c3aed] rounded-2xl flex flex-col items-center justify-center hover:bg-[#7c3aed]/20 transition">
+                }} className="aspect-square bg-zinc-900 border-2 border-[#7c3aed] rounded-2xl flex flex-col items-center justify-center hover:bg-[#7c3aed]/20 transition cursor-pointer">
                   <Layers size={40} className="text-[#7c3aed] mb-2"/>
                   <p className="font-black text-white text-sm">PASTE</p>
                 </button>
@@ -903,10 +906,20 @@ export default function App() {
                 </button>
               </div>
 
+              <h3 className="text-2xl font-black mb-6 text-white text-center">SHARE TO SOCIAL MEDIA</h3>
+              <div className="grid grid-cols-3 gap-4 mb-8">
+                <button disabled={!currentVideo} className="bg-red-600 py-4 rounded-xl font-bold hover:bg-red-700 transition disabled:opacity-50">📺 YOUTUBE</button>
+                <button disabled={!currentVideo} className="bg-blue-600 py-4 rounded-xl font-bold hover:bg-blue-700 transition disabled:opacity-50">📘 FACEBOOK</button>
+                <button disabled={!currentVideo} className="bg-gradient-to-r from-purple-600 to-pink-600 py-4 rounded-xl font-bold hover:opacity-90 transition disabled:opacity-50">📸 INSTAGRAM</button>
+                <button disabled={!currentVideo} className="bg-black py-4 rounded-xl font-bold hover:bg-zinc-900 transition disabled:opacity-50 border border-white">𝕏 TWITTER</button>
+                <button disabled={!currentVideo} className="bg-pink-600 py-4 rounded-xl font-bold hover:bg-pink-700 transition disabled:opacity-50">🎵 TIKTOK</button>
+                <button disabled={!currentVideo} className="bg-blue-500 py-4 rounded-xl font-bold hover:bg-blue-600 transition disabled:opacity-50">🎬 VIMEO</button>
+              </div>
+
               <button 
                 onClick={() => setPage(20)}
                 disabled={!currentVideo}
-                className="w-full bg-blue-600 py-6 rounded-xl font-black uppercase text-xl hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center gap-3"
+                className="w-full bg-[#7c3aed] py-6 rounded-xl font-black uppercase text-xl hover:bg-[#6d28d9] transition disabled:opacity-50 flex items-center justify-center gap-3"
               >
                 <Share2 size={24}/>
                 SHARE TO COMMUNITY HUB
@@ -1193,13 +1206,19 @@ export default function App() {
                 </a>
               </div>
 
-              <div className="flex gap-8 justify-center">
+              <div className="flex gap-8 justify-center mb-12">
                 <button onClick={() => setPage(1)} className="px-20 py-8 bg-white text-black rounded-full font-black uppercase text-3xl hover:scale-105 transition shadow-2xl">
                   🏠 HOME
                 </button>
                 <button onClick={() => window.close()} className="px-20 py-8 bg-red-600 text-white rounded-full font-black uppercase text-3xl hover:scale-105 transition shadow-2xl">
                   ✕ CLOSE APP
                 </button>
+              </div>
+
+              <div className="text-center">
+                <a href="https://thatsallfolks.com" target="_blank" rel="noopener noreferrer" className="text-[#7c3aed] text-2xl font-black hover:text-[#a78bfa] transition">
+                  ThatsAllFolks.com
+                </a>
               </div>
             </div>
           </div>
