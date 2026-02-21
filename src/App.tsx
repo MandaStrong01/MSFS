@@ -386,7 +386,6 @@ export default function App() {
                   try {
                     const text = await navigator.clipboard.readText();
                     if (text && text.trim()) {
-                      // Accept URLs (http/https/data) OR plain text
                       const isUrl = text.startsWith('http') || text.startsWith('data:');
                       const newItem = {
                         id: Date.now(),
@@ -399,13 +398,9 @@ export default function App() {
                       };
                       setMediaLibrary(prev => [...prev, newItem]);
                       setSelectedTool(null);
-                      alert('✅ Pasted successfully!');
-                    } else {
-                      alert('📋 Clipboard is empty');
                     }
                   } catch (err) {
                     console.error('Paste error:', err);
-                    alert('❌ Please allow clipboard access in your browser settings');
                   }
                 }} className="aspect-square bg-zinc-900 border-2 border-[#7c3aed] rounded-2xl flex flex-col items-center justify-center hover:bg-[#7c3aed]/20 transition cursor-pointer">
                   <Layers size={40} className="text-[#7c3aed] mb-2"/>
