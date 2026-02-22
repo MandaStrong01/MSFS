@@ -277,15 +277,23 @@ export default function App() {
         className="hidden"
       />
 
-      {/* Production Ready Badge */}
+      {/* Production Ready Badge & Duration Display */}
       {page > 0 && (
-        <div className="fixed top-6 right-6 z-50">
+        <div className="fixed top-6 right-6 z-50 flex flex-col gap-3">
           <div className="bg-gradient-to-r from-green-600 to-green-500 px-6 py-3 rounded-full shadow-2xl border-2 border-green-400">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-white rounded-full animate-pulse"/>
               <span className="text-white font-black text-sm uppercase">Production Ready</span>
             </div>
           </div>
+          {page >= 11 && (
+            <div className="bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] px-6 py-3 rounded-full shadow-2xl border-2 border-[#a78bfa]">
+              <div className="flex items-center gap-2">
+                <Clock size={16} className="text-white"/>
+                <span className="text-white font-black text-sm">{duration} MIN</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -572,34 +580,52 @@ export default function App() {
         {page === 11 && (
           <div className="min-h-screen p-8 pt-20 pb-40">
             <h1 className="text-6xl font-black uppercase text-[#7c3aed] mb-12 text-center">EDITOR SUITE</h1>
-            <div className="max-w-4xl mx-auto bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] rounded-3xl p-12 mb-12 border-4 border-[#a78bfa]">
-              <div className="flex items-center gap-6 mb-8">
-                <Clock size={56} className="text-white"/>
-                <h3 className="text-4xl font-black text-white">MOVIE DURATION</h3>
+            <div className="max-w-4xl mx-auto bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] rounded-3xl p-12 mb-12 border-4 border-[#a78bfa] shadow-2xl">
+              <div className="flex items-center justify-center gap-6 mb-8">
+                <Clock size={64} className="text-white animate-pulse"/>
+                <h3 className="text-5xl font-black text-white">MOVIE DURATION</h3>
               </div>
-              <div className="text-center mb-6">
-                <div className="text-8xl font-black text-white">{duration}</div>
-                <div className="text-2xl font-bold text-white/80 uppercase">MINUTES</div>
+              <div className="text-center mb-8">
+                <div className="text-9xl font-black text-white drop-shadow-2xl">{duration}</div>
+                <div className="text-3xl font-bold text-white/90 uppercase tracking-wide">MINUTES</div>
+                <div className="text-lg text-white/70 mt-2">
+                  {duration === 0 && "Set your movie length"}
+                  {duration > 0 && duration <= 5 && "Quick clip"}
+                  {duration > 5 && duration <= 15 && "Short video"}
+                  {duration > 15 && duration <= 60 && "Standard movie"}
+                  {duration > 60 && duration <= 120 && "Feature length"}
+                  {duration > 120 && "Epic production"}
+                </div>
               </div>
-              <input 
-                type="range" 
-                min="0" 
-                max="180" 
-                value={duration} 
-                onChange={(e) => setDuration(Number(e.target.value))} 
-                className="w-full h-4 bg-white/20 rounded-full mb-4 cursor-pointer appearance-none"
+              <input
+                type="range"
+                min="0"
+                max="180"
+                value={duration}
+                onChange={(e) => setDuration(Number(e.target.value))}
+                className="w-full h-6 bg-white/20 rounded-full mb-4 cursor-pointer appearance-none hover:bg-white/30 transition"
                 style={{accentColor: 'white'}}
               />
-              <div className="flex justify-between text-sm text-white/70 mb-8">
+              <div className="flex justify-between text-base text-white/90 mb-8 font-bold">
                 <span>0 min</span>
-                <span>180 min (3 hours)</span>
+                <span>90 min (1.5 hrs)</span>
+                <span>180 min (3 hrs)</span>
               </div>
-              <div className="grid grid-cols-4 gap-3">
-                {[30,60,90,120].map(m => (
-                  <button key={m} onClick={() => setDuration(m)} className={`py-4 rounded-xl font-bold text-lg transition ${duration===m?'bg-white text-[#7c3aed]':'bg-white/20 text-white hover:bg-white/30'}`}>
-                    {m} min
+              <div className="text-center mb-4 text-white/70 text-sm font-bold uppercase">Quick Presets</div>
+              <div className="grid grid-cols-6 gap-3">
+                {[5, 15, 30, 60, 90, 120].map(m => (
+                  <button key={m} onClick={() => setDuration(m)} className={`py-4 rounded-xl font-bold text-lg transition ${duration===m?'bg-white text-[#7c3aed] scale-110 shadow-xl':'bg-white/20 text-white hover:bg-white/30 hover:scale-105'}`}>
+                    {m}
                   </button>
                 ))}
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <button onClick={() => setDuration(0)} className={`py-3 rounded-xl font-bold transition ${duration===0?'bg-white text-[#7c3aed]':'bg-white/10 text-white/60 hover:bg-white/20'}`}>
+                  RESET
+                </button>
+                <button onClick={() => setDuration(180)} className={`py-3 rounded-xl font-bold transition ${duration===180?'bg-white text-[#7c3aed]':'bg-white/10 text-white/60 hover:bg-white/20'}`}>
+                  MAX (3 hrs)
+                </button>
               </div>
             </div>
             <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
@@ -870,7 +896,13 @@ export default function App() {
         {page === 15 && (
           <div className="min-h-screen p-8 pt-20 pb-40">
             <div className="max-w-6xl mx-auto">
-              <h1 className="text-5xl font-black text-[#7c3aed] mb-8 uppercase text-center">LIVE VIDEO PREVIEW</h1>
+              <h1 className="text-5xl font-black text-[#7c3aed] mb-4 uppercase text-center">LIVE VIDEO PREVIEW</h1>
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center gap-3 bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] px-8 py-4 rounded-full">
+                  <Clock size={24} className="text-white"/>
+                  <span className="text-white font-black text-xl">{duration} MINUTES</span>
+                </div>
+              </div>
 
               {mediaLibrary.filter(a => a.type === 'video').length > 0 ? (
                 <div className="mb-8">
@@ -928,8 +960,15 @@ export default function App() {
         {page === 16 && (
           <div className="h-screen flex items-center justify-center p-8">
             <div className="max-w-4xl w-full bg-zinc-950 border-4 border-[#7c3aed] rounded-3xl p-12">
-              <h1 className="text-5xl font-black text-[#7c3aed] mb-12 text-center">EXPORT YOUR MOVIE</h1>
-              
+              <h1 className="text-5xl font-black text-[#7c3aed] mb-8 text-center">EXPORT YOUR MOVIE</h1>
+
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center gap-3 bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] px-8 py-4 rounded-full">
+                  <Clock size={24} className="text-white"/>
+                  <span className="text-white font-black text-xl">{duration} MIN MOVIE</span>
+                </div>
+              </div>
+
               {currentVideo && (
                 <div className="bg-black border-2 border-[#7c3aed] rounded-2xl p-6 mb-8">
                   <div className="flex items-center gap-4 mb-4">
