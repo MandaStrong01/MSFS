@@ -6,6 +6,7 @@ import VideoTrimmer from './components/VideoTrimmer';
 import FullscreenMovieViewer from './components/FullscreenMovieViewer';
 import TimelineEditor from './components/TimelineEditor';
 import VideoPreview from './components/VideoPreview';
+import LoadingSpinner, { ProgressBar, InlineLoader } from './components/LoadingSpinner';
 import { createVideoProcessor } from './lib/videoProcessor';
 import { supabase } from './lib/supabase';
 
@@ -56,6 +57,9 @@ export default function App() {
   const [userEmail, setUserEmail] = useState('');
   const [showTimelineEditor, setShowTimelineEditor] = useState(false);
   const [previewAsset, setPreviewAsset] = useState(null);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [processingMessage, setProcessingMessage] = useState('');
   const [communityPosts, setCommunityPosts] = useState([
     {id:1,title:'Epic Action Movie',user:'Sarah J.',emoji:'🎬',likes:2847,loves:1923,comments:[]},
     {id:2,title:'Family Vacation',user:'Mike Chen',emoji:'✈️',likes:1256,loves:892,comments:[]},
@@ -89,8 +93,24 @@ export default function App() {
   // REAL FILE UPLOAD
   const handleFileUpload = useCallback((e) => {
     const files = Array.from(e.target.files);
-    files.forEach(file => {
+    if (files.length === 0) return;
+
+    setUploadingFiles(true);
+    setUploadProgress(0);
+    setProcessingMessage(`Uploading ${files.length} file${files.length > 1 ? 's' : ''}...`);
+
+    let completed = 0;
+    files.forEach((file, index) => {
       const reader = new FileReader();
+
+      reader.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const fileProgress = (event.loaded / event.total) * 100;
+          const totalProgress = ((completed + fileProgress / 100) / files.length) * 100;
+          setUploadProgress(totalProgress);
+        }
+      };
+
       reader.onload = (event) => {
         const newAsset = {
           id: Date.now() + Math.random(),
@@ -101,9 +121,32 @@ export default function App() {
           timestamp: new Date().toISOString()
         };
         setMediaLibrary(prev => [...prev, newAsset]);
+
+        completed++;
+        setUploadProgress((completed / files.length) * 100);
+
+        if (completed === files.length) {
+          setProcessingMessage('Upload complete!');
+          setTimeout(() => {
+            setUploadingFiles(false);
+            setUploadProgress(0);
+            setProcessingMessage('');
+          }, 1000);
+        }
       };
+
+      reader.onerror = () => {
+        completed++;
+        if (completed === files.length) {
+          setUploadingFiles(false);
+          setUploadProgress(0);
+          setProcessingMessage('');
+        }
+      };
+
       reader.readAsDataURL(file);
     });
+
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
@@ -138,24 +181,48 @@ export default function App() {
   // AI GENERATION
   const handleAIGenerate = useCallback(() => {
     if (!aiPrompt.trim()) return;
-    
+
     setGenerating(true);
-    setTimeout(() => {
-      const newAsset = {
-        id: Date.now(),
-        name: `AI-${selectedTool.replace(/\s+/g,'-').toLowerCase()}-${Date.now()}.mp4`,
-        type: 'video',
-        size: (Math.random() * 500 + 100).toFixed(2) + 'MB',
-        url: `data:video/mp4;base64,SIMULATED_AI_GENERATED_CONTENT`,
-        aiGenerated: true,
-        prompt: aiPrompt,
-        timestamp: new Date().toISOString()
-      };
-      setMediaLibrary(prev => [...prev, newAsset]);
-      setGenerating(false);
-      setAiPrompt('');
-      setSelectedTool(null);
-    }, 2000);
+    setProcessingMessage('Initializing AI generation...');
+    setRenderProgress(0);
+
+    const stages = [
+      { progress: 20, message: 'Analyzing prompt...' },
+      { progress: 40, message: 'Generating video content...' },
+      { progress: 60, message: 'Applying AI enhancements...' },
+      { progress: 80, message: 'Finalizing output...' },
+      { progress: 100, message: 'Complete!' }
+    ];
+
+    let currentStage = 0;
+    const interval = setInterval(() => {
+      if (currentStage < stages.length) {
+        setRenderProgress(stages[currentStage].progress);
+        setProcessingMessage(stages[currentStage].message);
+        currentStage++;
+      } else {
+        clearInterval(interval);
+        const newAsset = {
+          id: Date.now(),
+          name: `AI-${selectedTool.replace(/\s+/g,'-').toLowerCase()}-${Date.now()}.mp4`,
+          type: 'video',
+          size: (Math.random() * 500 + 100).toFixed(2) + 'MB',
+          url: `data:video/mp4;base64,SIMULATED_AI_GENERATED_CONTENT`,
+          aiGenerated: true,
+          prompt: aiPrompt,
+          timestamp: new Date().toISOString()
+        };
+        setMediaLibrary(prev => [...prev, newAsset]);
+
+        setTimeout(() => {
+          setGenerating(false);
+          setRenderProgress(0);
+          setProcessingMessage('');
+          setAiPrompt('');
+          setSelectedTool(null);
+        }, 500);
+      }
+    }, 800);
   }, [aiPrompt, selectedTool]);
 
   // DRAG & DROP TO TIMELINE
@@ -183,71 +250,102 @@ export default function App() {
 
   // APPLY ENHANCEMENT
   const applyEnhancement = useCallback(() => {
-    const enhancedAsset = {
-      id: Date.now(),
-      name: `enhanced-${selectedEnhancement.toLowerCase().replace(/\s+/g,'-')}-${Date.now()}.mp4`,
-      type: 'video',
-      size: (Math.random() * 500 + 100).toFixed(2) + 'MB',
-      url: `data:video/mp4;base64,ENHANCED_CONTENT`,
-      enhanced: true,
-      enhancement: selectedEnhancement,
-      settings: { ...enhancementSettings },
-      timestamp: new Date().toISOString()
-    };
-    setMediaLibrary(prev => [...prev, enhancedAsset]);
-    setSelectedEnhancement(null);
+    setProcessingMessage(`Applying ${selectedEnhancement}...`);
+    setUploadProgress(0);
+
+    const enhanceInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(enhanceInterval);
+          const enhancedAsset = {
+            id: Date.now(),
+            name: `enhanced-${selectedEnhancement.toLowerCase().replace(/\s+/g,'-')}-${Date.now()}.mp4`,
+            type: 'video',
+            size: (Math.random() * 500 + 100).toFixed(2) + 'MB',
+            url: `data:video/mp4;base64,ENHANCED_CONTENT`,
+            enhanced: true,
+            enhancement: selectedEnhancement,
+            settings: { ...enhancementSettings },
+            timestamp: new Date().toISOString()
+          };
+          setMediaLibrary(prev => [...prev, enhancedAsset]);
+
+          setTimeout(() => {
+            setSelectedEnhancement(null);
+            setUploadProgress(0);
+            setProcessingMessage('');
+          }, 500);
+
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 200);
   }, [selectedEnhancement, enhancementSettings]);
 
   // RENDER VIDEO - PRODUCTION VERSION
   const handleRender = useCallback(() => {
     setRendering(true);
     setRenderProgress(0);
+    setProcessingMessage('Initializing render...');
 
+    const renderStages = [
+      { progress: 15, message: 'Processing video tracks...' },
+      { progress: 30, message: 'Processing audio tracks...' },
+      { progress: 45, message: 'Applying effects and transitions...' },
+      { progress: 60, message: 'Color grading and enhancement...' },
+      { progress: 75, message: 'Encoding video...' },
+      { progress: 90, message: 'Finalizing render...' },
+      { progress: 100, message: 'Render complete!' }
+    ];
+
+    let stageIndex = 0;
     const interval = setInterval(() => {
-      setRenderProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            const timelineVideos = timeline.video || [];
-            const videoAssets = mediaLibrary.filter(a => a.type === 'video');
+      if (stageIndex < renderStages.length) {
+        setRenderProgress(renderStages[stageIndex].progress);
+        setProcessingMessage(renderStages[stageIndex].message);
+        stageIndex++;
+      } else {
+        clearInterval(interval);
+        setTimeout(() => {
+          const timelineVideos = timeline.video || [];
+          const videoAssets = mediaLibrary.filter(a => a.type === 'video');
 
-            let finalVideoUrl = '';
-            let finalSize = '0 MB';
+          let finalVideoUrl = '';
+          let finalSize = '0 MB';
 
-            if (videoAssets.length > 0) {
-              finalVideoUrl = videoAssets[0].url;
-              finalSize = videoAssets[0].size;
-            } else if (timelineVideos.length > 0) {
-              const firstVideo = mediaLibrary.find(a => a.id === timelineVideos[0].id);
-              if (firstVideo) {
-                finalVideoUrl = firstVideo.url;
-                finalSize = firstVideo.size;
-              }
+          if (videoAssets.length > 0) {
+            finalVideoUrl = videoAssets[0].url;
+            finalSize = videoAssets[0].size;
+          } else if (timelineVideos.length > 0) {
+            const firstVideo = mediaLibrary.find(a => a.id === timelineVideos[0].id);
+            if (firstVideo) {
+              finalVideoUrl = firstVideo.url;
+              finalSize = firstVideo.size;
             }
+          }
 
-            const renderedVideo = {
-              id: Date.now(),
-              name: `MandaStrong-Movie-${Date.now()}.${exportSettings.format.toLowerCase()}`,
-              type: 'video',
-              size: finalSize,
-              url: finalVideoUrl || `data:video/${exportSettings.format.toLowerCase()};base64,`,
-              rendered: true,
-              quality: exportSettings.quality,
-              format: exportSettings.format,
-              duration: duration,
-              timestamp: new Date().toISOString()
-            };
-            setMediaLibrary(prev => [...prev, renderedVideo]);
-            setCurrentVideo(renderedVideo);
-            setRendering(false);
-            setRenderProgress(0);
-            setPage(16);
-          }, 500);
-          return 100;
-        }
-        return prev + 5;
-      });
-    }, 100);
+          const renderedVideo = {
+            id: Date.now(),
+            name: `MandaStrong-Movie-${Date.now()}.${exportSettings.format.toLowerCase()}`,
+            type: 'video',
+            size: finalSize,
+            url: finalVideoUrl || `data:video/${exportSettings.format.toLowerCase()};base64,`,
+            rendered: true,
+            quality: exportSettings.quality,
+            format: exportSettings.format,
+            duration: duration,
+            timestamp: new Date().toISOString()
+          };
+          setMediaLibrary(prev => [...prev, renderedVideo]);
+          setCurrentVideo(renderedVideo);
+          setRendering(false);
+          setRenderProgress(0);
+          setProcessingMessage('');
+          setPage(16);
+        }, 500);
+      }
+    }, 500);
   }, [duration, exportSettings, timeline, mediaLibrary]);
 
   // DOWNLOAD FILE
@@ -626,7 +724,7 @@ export default function App() {
                     className="w-full bg-zinc-900 border border-[#7c3aed] p-3 rounded-lg text-white h-24 outline-none resize-none"
                   />
                 </div>
-                <button 
+                <button
                   onClick={handleAIGenerate}
                   disabled={!aiPrompt.trim() || generating}
                   className="w-full bg-[#7c3aed] py-4 rounded-xl font-black uppercase text-xl hover:bg-[#6d28d9] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
@@ -643,6 +741,11 @@ export default function App() {
                     </>
                   )}
                 </button>
+                {generating && (
+                  <div className="mt-4">
+                    <ProgressBar progress={renderProgress} message={processingMessage} />
+                  </div>
+                )}
                 <p className="text-xs text-center text-zinc-500">Assets automatically save to Media Library</p>
               </div>
             </div>
@@ -655,15 +758,27 @@ export default function App() {
             <div className="text-center max-w-3xl">
               <h1 className="text-6xl font-black uppercase text-[#7c3aed] mb-8">UPLOAD MEDIA</h1>
               <div
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => !uploadingFiles && fileInputRef.current?.click()}
                 onDragOver={handleDragOver}
                 onDrop={handleFileDrop}
-                className="aspect-video bg-zinc-950 rounded-3xl border-4 border-dashed border-[#7c3aed] mb-6 flex flex-col items-center justify-center cursor-pointer hover:bg-[#7c3aed]/10 transition"
+                className={`aspect-video bg-zinc-950 rounded-3xl border-4 border-dashed border-[#7c3aed] mb-6 flex flex-col items-center justify-center ${uploadingFiles ? 'cursor-wait' : 'cursor-pointer hover:bg-[#7c3aed]/10'} transition`}
               >
-                <Upload size={100} className="text-[#7c3aed] mb-4"/>
-                <p className="text-2xl font-bold text-white">Click to Browse Files</p>
-                <p className="text-zinc-400 mt-2">or drag and drop here</p>
-                <p className="text-xs text-[#7c3aed] mt-4 font-bold">✓ DRAG & DROP ACTIVE</p>
+                {uploadingFiles ? (
+                  <>
+                    <div className="w-20 h-20 border-8 border-[#7c3aed] border-t-transparent rounded-full animate-spin mb-4"/>
+                    <p className="text-2xl font-bold text-white mb-4">{processingMessage}</p>
+                    <div className="w-64">
+                      <ProgressBar progress={uploadProgress} />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Upload size={100} className="text-[#7c3aed] mb-4"/>
+                    <p className="text-2xl font-bold text-white">Click to Browse Files</p>
+                    <p className="text-zinc-400 mt-2">or drag and drop here</p>
+                    <p className="text-xs text-[#7c3aed] mt-4 font-bold">✓ DRAG & DROP ACTIVE</p>
+                  </>
+                )}
               </div>
 
               <div className="flex justify-center gap-4 mb-8">
@@ -975,11 +1090,29 @@ export default function App() {
                   <button onClick={() => setSelectedEnhancement(null)} className="px-16 py-4 bg-zinc-800 text-white rounded-xl font-black uppercase hover:bg-zinc-700 transition">
                     CANCEL
                   </button>
-                  <button onClick={applyEnhancement} className="px-16 py-4 bg-[#7c3aed] text-white rounded-xl font-black uppercase hover:bg-[#6d28d9] transition flex items-center gap-3">
-                    <CheckCircle size={24}/>
-                    APPLY & SAVE
+                  <button
+                    onClick={applyEnhancement}
+                    disabled={uploadProgress > 0 && uploadProgress < 100}
+                    className="px-16 py-4 bg-[#7c3aed] text-white rounded-xl font-black uppercase hover:bg-[#6d28d9] transition flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {uploadProgress > 0 && uploadProgress < 100 ? (
+                      <>
+                        <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"/>
+                        PROCESSING...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle size={24}/>
+                        APPLY & SAVE
+                      </>
+                    )}
                   </button>
                 </div>
+                {uploadProgress > 0 && uploadProgress < 100 && (
+                  <div className="mt-6">
+                    <ProgressBar progress={uploadProgress} message={processingMessage} />
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1577,6 +1710,49 @@ export default function App() {
                 title={previewAsset.name}
                 onClose={() => setPreviewAsset(null)}
               />
+            </div>
+          </div>
+        )}
+
+        {rendering && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center">
+            <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 rounded-3xl p-12 max-w-2xl w-full mx-4 border-2 border-blue-500/30 shadow-2xl">
+              <div className="text-center mb-8">
+                <div className="w-24 h-24 border-8 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"/>
+                <h2 className="text-4xl font-black text-white mb-4">RENDERING YOUR MOVIE</h2>
+                <p className="text-xl text-blue-400 font-bold animate-pulse">{processingMessage}</p>
+              </div>
+              <div className="space-y-4">
+                <ProgressBar progress={renderProgress} />
+                <div className="grid grid-cols-3 gap-4 text-center text-sm">
+                  <div className="bg-slate-800/50 rounded-lg p-3">
+                    <p className="text-slate-400 mb-1">Quality</p>
+                    <p className="text-white font-bold">{exportSettings.quality}</p>
+                  </div>
+                  <div className="bg-slate-800/50 rounded-lg p-3">
+                    <p className="text-slate-400 mb-1">Format</p>
+                    <p className="text-white font-bold">{exportSettings.format}</p>
+                  </div>
+                  <div className="bg-slate-800/50 rounded-lg p-3">
+                    <p className="text-slate-400 mb-1">Duration</p>
+                    <p className="text-white font-bold">{duration} min</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {(uploadingFiles || (processingMessage && !rendering && !generating)) && (
+          <div className="fixed bottom-8 right-8 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 rounded-2xl p-6 border-2 border-blue-500/30 shadow-2xl z-40 max-w-md">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin flex-shrink-0"/>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-bold mb-2">{processingMessage}</p>
+                {uploadProgress > 0 && (
+                  <ProgressBar progress={uploadProgress} />
+                )}
+              </div>
             </div>
           </div>
         )}
