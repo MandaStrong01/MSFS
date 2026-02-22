@@ -4,6 +4,8 @@ import LiveVideoEditor from './components/LiveVideoEditor';
 import PasteImporter from './components/PasteImporter';
 import VideoTrimmer from './components/VideoTrimmer';
 import FullscreenMovieViewer from './components/FullscreenMovieViewer';
+import TimelineEditor from './components/TimelineEditor';
+import VideoPreview from './components/VideoPreview';
 import { createVideoProcessor } from './lib/videoProcessor';
 import { supabase } from './lib/supabase';
 
@@ -52,6 +54,8 @@ export default function App() {
   const [showMovieViewer, setShowMovieViewer] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const [showTimelineEditor, setShowTimelineEditor] = useState(false);
+  const [previewAsset, setPreviewAsset] = useState(null);
   const [communityPosts, setCommunityPosts] = useState([
     {id:1,title:'Epic Action Movie',user:'Sarah J.',emoji:'🎬',likes:2847,loves:1923,comments:[]},
     {id:2,title:'Family Vacation',user:'Mike Chen',emoji:'✈️',likes:1256,loves:892,comments:[]},
@@ -803,9 +807,20 @@ export default function App() {
                             <span>{asset.size}</span>
                           </div>
                         </div>
-                        <button onClick={() => deleteFromLibrary(asset.id)} className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-400 transition">
-                          <Trash2 size={16}/>
-                        </button>
+                        <div className="flex gap-2">
+                          {asset.type === 'video' && (
+                            <button
+                              onClick={() => setPreviewAsset(asset)}
+                              className="opacity-0 group-hover:opacity-100 text-blue-400 hover:text-blue-300 transition"
+                              title="Preview video"
+                            >
+                              <Eye size={16}/>
+                            </button>
+                          )}
+                          <button onClick={() => deleteFromLibrary(asset.id)} className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-400 transition">
+                            <Trash2 size={16}/>
+                          </button>
+                        </div>
                       </div>
                       {asset.aiGenerated && (
                         <div className="text-xs bg-[#7c3aed] text-white px-2 py-1 rounded inline-block mt-2">
@@ -841,7 +856,16 @@ export default function App() {
                 )}
               </div>
               <div className="bg-zinc-950 p-6 border-t-4 border-[#7c3aed]">
-                <h3 className="text-2xl font-black uppercase text-[#7c3aed] mb-6">MULTI-TRACK TIMELINE</h3>
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-2xl font-black uppercase text-[#7c3aed]">MULTI-TRACK TIMELINE</h3>
+                  <button
+                    onClick={() => setShowTimelineEditor(true)}
+                    className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 px-4 py-2 rounded-lg text-white font-bold text-sm flex items-center gap-2 transition"
+                  >
+                    <Film size={16} />
+                    Open Timeline Editor
+                  </button>
+                </div>
                 <div className="space-y-3">
                   {[
                     { key: 'video', label: 'VIDEO TRACK', icon: FileVideo },
@@ -876,7 +900,7 @@ export default function App() {
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-zinc-500 mt-4 italic text-center">Drag assets from Media Library to timeline tracks</p>
+                <p className="text-xs text-zinc-500 mt-4 italic text-center">Drag assets from Media Library to timeline tracks or use the Timeline Editor</p>
               </div>
             </div>
           </div>
@@ -1511,6 +1535,50 @@ export default function App() {
             isAdmin={isAdmin}
             userEmail={userEmail}
           />
+        )}
+
+        {showTimelineEditor && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="w-full h-full max-w-[95vw] max-h-[95vh] bg-slate-900 rounded-2xl overflow-hidden flex flex-col">
+              <div className="flex-none flex justify-between items-center p-4 bg-slate-800 border-b border-white/10">
+                <h2 className="text-xl font-bold text-white">Professional Timeline Editor</h2>
+                <button
+                  onClick={() => setShowTimelineEditor(false)}
+                  className="text-slate-400 hover:text-white transition"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <TimelineEditor
+                  mediaLibrary={mediaLibrary}
+                  onRender={() => {
+                    setShowTimelineEditor(false);
+                    handleRender();
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {previewAsset && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-8">
+            <div className="w-full max-w-5xl relative">
+              <button
+                onClick={() => setPreviewAsset(null)}
+                className="absolute -top-12 right-0 text-white hover:text-red-400 transition flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 px-4 py-2 rounded-lg"
+              >
+                <X size={20} />
+                Close Preview
+              </button>
+              <VideoPreview
+                videoUrl={previewAsset.url}
+                title={previewAsset.name}
+                onClose={() => setPreviewAsset(null)}
+              />
+            </div>
+          </div>
         )}
       </main>
     </div>
