@@ -1,9 +1,11 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Menu, Sparkles, MessageCircle, ChevronLeft, ChevronRight, CheckCircle, Play, Upload, Film, Mic, Zap, Shield, Music, Sliders, Database, FileVideo, TrendingUp, BookOpen, Clock, ThumbsUp, Heart, HelpCircle, Plus, Settings, Eye, Layers, X, Download, Save, Wand2, Trash2, Share2, Search, Clipboard, Scissors } from 'lucide-react';
 import LiveVideoEditor from './components/LiveVideoEditor';
 import PasteImporter from './components/PasteImporter';
 import VideoTrimmer from './components/VideoTrimmer';
+import FullscreenMovieViewer from './components/FullscreenMovieViewer';
 import { createVideoProcessor } from './lib/videoProcessor';
+import { supabase } from './lib/supabase';
 
 const AI_TOOLS = {
   Writing: ["Text to Video","Text to Scene","Text to Animation","Text to Film","Script to Movie","Story to Video","Prompt to Video","Description to Scene","Narrative to Film","Dialogue to Animation","Plot to Video","Character to Scene","Action to Animation","Drama to Video","Comedy to Scene","Thriller to Film","Horror to Animation","Romance to Video","Sci-Fi to Scene","Fantasy to Film","Documentary Style","Commercial Creator","Trailer Maker","Music Video","Short Film Gen","Feature Film","Web Series","TV Episode","Podcast Video","Social Media","Vertical Video","Square Video","Widescreen","Ultra Wide","360 Video","VR Scene","AR Content","Hologram","Projection Map","LED Wall","Green Screen","Motion Graphics","Title Sequence","Credits Roll","Lower Thirds","Captions","Subtitles","Voiceover","Narration","Sound Design","Foley","Ambient Sound","Music Score","Theme Song","Jingle","Sound Effect","Transition Sound","Impact","Riser","Drop","Whoosh","Swoosh","Glitch","Digital","Analog","Vintage","Modern","Futuristic","Retro","Classic","Contemporary","Experimental","Abstract","Realistic","Stylized","Cartoon","Anime","3D Animation","2D Animation","Stop Motion","Claymation","Rotoscope","Motion Capture","CGI","VFX","Practical FX","Miniatures","Matte Painting","Compositing","Keying","Tracking","Stabilization","Color Grade","LUT Apply","Film Look","Digital Look","Broadcast","Cinema","IMAX","Anamorphic","Spherical","Wide Angle","Telephoto","Macro","Tilt Shift","Fisheye","Drone Shot","Aerial View","Birds Eye","Worms Eye","POV","First Person","Third Person","Isometric","Top Down","Side Scroller","Parallax","Ken Burns","Time Lapse","Hyperlapse"],
@@ -47,6 +49,9 @@ export default function App() {
   const [showPasteImporter, setShowPasteImporter] = useState(false);
   const [trimmerVideo, setTrimmerVideo] = useState(null);
   const [importedProjects, setImportedProjects] = useState([]);
+  const [showMovieViewer, setShowMovieViewer] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
   const [communityPosts, setCommunityPosts] = useState([
     {id:1,title:'Epic Action Movie',user:'Sarah J.',emoji:'🎬',likes:2847,loves:1923,comments:[]},
     {id:2,title:'Family Vacation',user:'Mike Chen',emoji:'✈️',likes:1256,loves:892,comments:[]},
@@ -57,6 +62,25 @@ export default function App() {
   
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserEmail(user.email || '');
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('plan')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (profile?.plan === 'admin') {
+          setIsAdmin(true);
+        }
+      }
+    };
+    checkAdminStatus();
+  }, []);
 
   // REAL FILE UPLOAD
   const handleFileUpload = useCallback((e) => {
@@ -1019,6 +1043,10 @@ export default function App() {
                   <Film size={24}/>
                   BACK TO TIMELINE
                 </button>
+                <button onClick={() => setShowMovieViewer(true)} className="bg-gradient-to-r from-purple-600 to-pink-600 px-12 py-4 rounded-xl font-black uppercase flex items-center gap-3 hover:scale-105 transition shadow-xl">
+                  <Eye size={24}/>
+                  FULLSCREEN VIEWER
+                </button>
                 <button onClick={handleRender} className="bg-[#7c3aed] px-12 py-4 rounded-xl font-black uppercase flex items-center gap-3 hover:bg-[#6d28d9] transition">
                   <Zap size={24}/>
                   START RENDER
@@ -1474,6 +1502,14 @@ export default function App() {
             videoName={trimmerVideo.name}
             onTrimComplete={handleTrimComplete}
             onClose={() => setTrimmerVideo(null)}
+          />
+        )}
+
+        {showMovieViewer && (
+          <FullscreenMovieViewer
+            onClose={() => setShowMovieViewer(false)}
+            isAdmin={isAdmin}
+            userEmail={userEmail}
           />
         )}
       </main>

@@ -41,6 +41,9 @@ export default function LiveVideoEditor({ assets, onClose }: LiveVideoEditorProp
     video.addEventListener('loadedmetadata', updateDuration);
     video.addEventListener('ended', handleEnded);
 
+    video.play().catch(() => {});
+    setIsPlaying(true);
+
     return () => {
       video.removeEventListener('timeupdate', updateTime);
       video.removeEventListener('loadedmetadata', updateDuration);
@@ -111,6 +114,8 @@ export default function LiveVideoEditor({ assets, onClose }: LiveVideoEditorProp
         src={currentAsset.url}
         className="w-full aspect-video bg-black"
         onClick={togglePlay}
+        autoPlay
+        playsInline
       />
 
       <div className="p-6 bg-zinc-900">
