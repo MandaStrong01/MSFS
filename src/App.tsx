@@ -1,6 +1,9 @@
 import { useState, useRef, useCallback } from 'react';
-import { Menu, Sparkles, MessageCircle, ChevronLeft, ChevronRight, CheckCircle, Play, Upload, Film, Mic, Zap, Shield, Music, Sliders, Database, FileVideo, TrendingUp, BookOpen, Clock, ThumbsUp, Heart, HelpCircle, Plus, Settings, Eye, Layers, X, Download, Save, Wand2, Trash2, Share2, Search } from 'lucide-react';
+import { Menu, Sparkles, MessageCircle, ChevronLeft, ChevronRight, CheckCircle, Play, Upload, Film, Mic, Zap, Shield, Music, Sliders, Database, FileVideo, TrendingUp, BookOpen, Clock, ThumbsUp, Heart, HelpCircle, Plus, Settings, Eye, Layers, X, Download, Save, Wand2, Trash2, Share2, Search, Clipboard, Scissors } from 'lucide-react';
 import LiveVideoEditor from './components/LiveVideoEditor';
+import PasteImporter from './components/PasteImporter';
+import VideoTrimmer from './components/VideoTrimmer';
+import { createVideoProcessor } from './lib/videoProcessor';
 
 const AI_TOOLS = {
   Writing: ["Text to Video","Text to Scene","Text to Animation","Text to Film","Script to Movie","Story to Video","Prompt to Video","Description to Scene","Narrative to Film","Dialogue to Animation","Plot to Video","Character to Scene","Action to Animation","Drama to Video","Comedy to Scene","Thriller to Film","Horror to Animation","Romance to Video","Sci-Fi to Scene","Fantasy to Film","Documentary Style","Commercial Creator","Trailer Maker","Music Video","Short Film Gen","Feature Film","Web Series","TV Episode","Podcast Video","Social Media","Vertical Video","Square Video","Widescreen","Ultra Wide","360 Video","VR Scene","AR Content","Hologram","Projection Map","LED Wall","Green Screen","Motion Graphics","Title Sequence","Credits Roll","Lower Thirds","Captions","Subtitles","Voiceover","Narration","Sound Design","Foley","Ambient Sound","Music Score","Theme Song","Jingle","Sound Effect","Transition Sound","Impact","Riser","Drop","Whoosh","Swoosh","Glitch","Digital","Analog","Vintage","Modern","Futuristic","Retro","Classic","Contemporary","Experimental","Abstract","Realistic","Stylized","Cartoon","Anime","3D Animation","2D Animation","Stop Motion","Claymation","Rotoscope","Motion Capture","CGI","VFX","Practical FX","Miniatures","Matte Painting","Compositing","Keying","Tracking","Stabilization","Color Grade","LUT Apply","Film Look","Digital Look","Broadcast","Cinema","IMAX","Anamorphic","Spherical","Wide Angle","Telephoto","Macro","Tilt Shift","Fisheye","Drone Shot","Aerial View","Birds Eye","Worms Eye","POV","First Person","Third Person","Isometric","Top Down","Side Scroller","Parallax","Ken Burns","Time Lapse","Hyperlapse"],
@@ -41,6 +44,9 @@ export default function App() {
   const [audioLevels, setAudioLevels] = useState({ music: 75, voice: 50, sfx: 65, master: 80 });
   const [enhancementSettings, setEnhancementSettings] = useState({ intensity: 75, clarity: 75, color: 75, brightness: 75 });
   const [exportSettings, setExportSettings] = useState({ quality: '8K', format: 'MP4' });
+  const [showPasteImporter, setShowPasteImporter] = useState(false);
+  const [trimmerVideo, setTrimmerVideo] = useState(null);
+  const [importedProjects, setImportedProjects] = useState([]);
   const [communityPosts, setCommunityPosts] = useState([
     {id:1,title:'Epic Action Movie',user:'Sarah J.',emoji:'🎬',likes:2847,loves:1923,comments:[]},
     {id:2,title:'Family Vacation',user:'Mike Chen',emoji:'✈️',likes:1256,loves:892,comments:[]},
@@ -218,10 +224,86 @@ export default function App() {
 
   // DOWNLOAD FILE
   const handleDownload = useCallback((asset) => {
-    const link = document.createElement('a');
-    link.href = asset.url;
-    link.download = asset.name;
-    link.click();
+    if (asset.blob) {
+      const url = URL.createObjectURL(asset.blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = asset.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } else {
+      const link = document.createElement('a');
+      link.href = asset.url;
+      link.download = asset.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }, []);
+
+  // HANDLE TRIM COMPLETE
+  const handleTrimComplete = useCallback((blob, name) => {
+    const trimmedUrl = URL.createObjectURL(blob);
+    const trimmedAsset = {
+      id: Date.now(),
+      name,
+      type: 'video',
+      size: (blob.size / 1024 / 1024).toFixed(2) + 'MB',
+      url: trimmedUrl,
+      blob,
+      timestamp: new Date().toISOString()
+    };
+    setMediaLibrary(prev => [...prev, trimmedAsset]);
+    setTrimmerVideo(null);
+  }, []);
+
+  // HANDLE PASTE IMPORT
+  const handlePasteImport = useCallback(async (content) => {
+    const project = {
+      id: Date.now(),
+      name: content.name,
+      type: content.type,
+      content: content.data,
+      timestamp: new Date().toISOString()
+    };
+
+    setImportedProjects(prev => [...prev, project]);
+
+    if (content.type === 'url') {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const urls = content.data.match(urlRegex) || [];
+
+      urls.forEach((url, idx) => {
+        if (url.match(/\.(mp4|webm|ogg|mov|avi)$/i)) {
+          const videoAsset = {
+            id: Date.now() + idx,
+            name: `imported-video-${idx + 1}.mp4`,
+            type: 'video',
+            url: url,
+            size: 'Remote',
+            imported: true,
+            timestamp: new Date().toISOString()
+          };
+          setMediaLibrary(prev => [...prev, videoAsset]);
+        }
+      });
+    } else if (content.type === 'script' || content.type === 'text') {
+      const textAsset = {
+        id: Date.now(),
+        name: content.name,
+        type: 'text',
+        content: content.data,
+        imported: true,
+        size: `${(content.data.length / 1024).toFixed(2)} KB`,
+        timestamp: new Date().toISOString()
+      };
+      setMediaLibrary(prev => [...prev, textAsset]);
+    }
+
+    setShowPasteImporter(false);
+    setPage(12);
   }, []);
 
   // COMMUNITY INTERACTIONS
@@ -548,13 +630,24 @@ export default function App() {
                 onClick={() => fileInputRef.current?.click()}
                 onDragOver={handleDragOver}
                 onDrop={handleFileDrop}
-                className="aspect-video bg-zinc-950 rounded-3xl border-4 border-dashed border-[#7c3aed] mb-8 flex flex-col items-center justify-center cursor-pointer hover:bg-[#7c3aed]/10 transition"
+                className="aspect-video bg-zinc-950 rounded-3xl border-4 border-dashed border-[#7c3aed] mb-6 flex flex-col items-center justify-center cursor-pointer hover:bg-[#7c3aed]/10 transition"
               >
                 <Upload size={100} className="text-[#7c3aed] mb-4"/>
                 <p className="text-2xl font-bold text-white">Click to Browse Files</p>
                 <p className="text-zinc-400 mt-2">or drag and drop here</p>
                 <p className="text-xs text-[#7c3aed] mt-4 font-bold">✓ DRAG & DROP ACTIVE</p>
               </div>
+
+              <div className="flex justify-center gap-4 mb-8">
+                <button
+                  onClick={() => setShowPasteImporter(true)}
+                  className="bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] px-8 py-4 rounded-xl font-black uppercase hover:scale-105 transition shadow-xl flex items-center gap-3"
+                >
+                  <Clipboard size={24}/>
+                  PASTE CONTENT
+                </button>
+              </div>
+
               <div className="grid grid-cols-3 gap-4 text-left">
                 <div className="bg-zinc-950 border border-[#7c3aed] p-4 rounded-xl">
                   <FileVideo size={32} className="text-[#7c3aed] mb-2"/>
@@ -1366,6 +1459,22 @@ export default function App() {
               </div>
             </div>
           </div>
+        )}
+
+        {showPasteImporter && (
+          <PasteImporter
+            onImport={handlePasteImport}
+            onClose={() => setShowPasteImporter(false)}
+          />
+        )}
+
+        {trimmerVideo && (
+          <VideoTrimmer
+            videoUrl={trimmerVideo.url}
+            videoName={trimmerVideo.name}
+            onTrimComplete={handleTrimComplete}
+            onClose={() => setTrimmerVideo(null)}
+          />
         )}
       </main>
     </div>
