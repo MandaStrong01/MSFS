@@ -11,6 +11,17 @@ const AI_TOOLS = {
 
 const ENHANCEMENT_TOOLS = ["AI 8K Upscaling","Cinematic Grain","Motion Stabilization","Deep HDR Boost","Face Retouch Pro","Neural Noise Reduction","Auto Color Balance","Dynamic Range Expansion","Lens Flare Synth","Shadow Recovery","Highlight Rolloff","Skin Tone Uniformity","Optical Flow Smooth","Atmospheric Haze","Sharpen Intelligence","De-Banding Pro","Moire Removal","Color Space Transform","Anamorphic Stretch","Flicker Reduction","Low Light Clarity","Texture Enhancement","Micro-Contrast Adjust","Vignette Pro","Film Stock Emulation","Glow Synthesis","Edge Refinement","Smart Saturation","Tone Mapping Pro","Gamma Correction","Black Point Calibration","White Balance AI","Color Match Pro","Temporal Denoise","Digital Intermediate","Chromatic Correction","Film Grain Advanced","Halation Effect","Bloom Control","Light Wrap"];
 
+const TOOL_DESCRIPTIONS = {
+  "Generate": "Create AI-generated video content from your text prompts and ideas",
+  "Upload": "Import your own video, audio, or image files from your device",
+  "Paste": "Paste text descriptions or URLs directly from your clipboard",
+  "Media Library": "Organize and manage all your uploaded and generated media assets",
+  "Timeline": "Arrange and edit your video clips on a multi-track timeline with drag-and-drop functionality",
+  "Render": "Process your timeline into a final high-quality video file",
+  "Export": "Download your finished video or share it directly to social media platforms",
+  "Tutorial": "Watch step-by-step video guides to master the studio tools"
+};
+
 export default function App() {
   const [page, setPage] = useState(1);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -274,9 +285,9 @@ export default function App() {
         {/* PAGE 1 */}
         {page === 1 && (
           <div className="h-screen flex flex-col justify-center items-center text-center px-6">
-            <Sparkles size={64} className="text-[#7c3aed] mb-8 animate-pulse"/>
-            <h1 className="text-7xl md:text-9xl font-black text-[#7c3aed] uppercase mb-6">MANDASTRONG STUDIO</h1>
-            <p className="text-xl md:text-2xl font-bold text-[#7c3aed] max-w-3xl mb-16">Welcome To The All In One Make Your Own Longer Movies App!</p>
+            <Sparkles size={48} className="text-[#7c3aed] mb-6 animate-pulse"/>
+            <h1 className="text-5xl md:text-7xl font-black text-[#7c3aed] uppercase mb-4">MANDASTRONG STUDIO</h1>
+            <p className="text-lg md:text-xl font-bold text-[#7c3aed] max-w-3xl mb-12">Welcome To The All In One Make Your Own Longer Movies App!</p>
             <button onClick={() => setPage(2)} className="bg-[#7c3aed] text-white px-16 py-4 rounded-full font-black uppercase text-xl hover:scale-105 transition shadow-2xl">START CREATING</button>
           </div>
         )}
@@ -284,9 +295,9 @@ export default function App() {
         {/* PAGE 2 */}
         {page === 2 && (
           <div className="h-screen flex flex-col justify-center items-center text-center px-4">
-            <Sparkles size={64} className="text-[#7c3aed] mb-6"/>
-            <h1 className="text-5xl md:text-8xl font-black text-[#7c3aed] uppercase mb-6">MANDASTRONG STUDIO</h1>
-            <p className="text-2xl md:text-4xl font-bold text-[#7c3aed] italic uppercase max-w-5xl">WELCOME! MAKE AWESOME FAMILY MOVIES OR TURN YOUR DREAMS INTO REALITY. ENJOY!</p>
+            <Sparkles size={48} className="text-[#7c3aed] mb-4"/>
+            <h1 className="text-4xl md:text-6xl font-black text-[#7c3aed] uppercase mb-4">MANDASTRONG STUDIO</h1>
+            <p className="text-xl md:text-3xl font-bold text-[#7c3aed] italic uppercase max-w-5xl">WELCOME! MAKE AWESOME FAMILY MOVIES OR TURN YOUR DREAMS INTO REALITY. ENJOY!</p>
           </div>
         )}
 
@@ -308,7 +319,8 @@ export default function App() {
               </div>
             </div>
             <div className="max-w-6xl mx-auto">
-              <h2 className="text-4xl font-black text-center mb-12 uppercase text-white">Choose Your Plan</h2>
+              <h2 className="text-4xl font-black text-center mb-12 uppercase text-white">Browse First</h2>
+              <p className="text-center text-zinc-400 mb-8 text-lg">All features are available and active for all subscribers. Explore the full studio capabilities!</p>
               <div className="grid md:grid-cols-3 gap-6">
                 {[
                   {t:'Basic',p:'20',s:'https://buy.stripe.com/test_14k00SfE88Wn5K85kk',f:['HD Export (1080p)','100 AI Tools','10GB Storage','Email Support']},
@@ -335,8 +347,8 @@ export default function App() {
           const allTools = AI_TOOLS[boards[page-4]] || [];
           const tools = toolSearch ? allTools.filter(t => t.toLowerCase().includes(toolSearch.toLowerCase())) : allTools;
           return (
-            <div className="h-screen flex flex-col pt-20 pb-40">
-              <h2 className="text-5xl font-black uppercase text-[#7c3aed] text-center mb-6">AI TOOL BOARD</h2>
+            <div className="h-screen flex flex-col pt-16 pb-40">
+              <h2 className="text-3xl font-black uppercase text-[#7c3aed] text-center mb-4">AI TOOL BOARD</h2>
               
               {/* SEARCH BAR */}
               <div className="px-8 mb-6">
@@ -883,8 +895,15 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-8">
-                <button 
+              <div className="grid grid-cols-3 gap-4 mb-8">
+                <button
+                  onClick={handleRender}
+                  className="bg-[#7c3aed] py-6 rounded-xl font-black uppercase text-xl hover:bg-[#6d28d9] transition flex items-center justify-center gap-3"
+                >
+                  <Zap size={24}/>
+                  EXPORT
+                </button>
+                <button
                   onClick={() => currentVideo && handleDownload(currentVideo)}
                   disabled={!currentVideo}
                   className="bg-[#7c3aed] py-6 rounded-xl font-black uppercase text-xl hover:bg-[#6d28d9] transition disabled:opacity-50 flex items-center justify-center gap-3"
@@ -892,7 +911,7 @@ export default function App() {
                   <Download size={24}/>
                   DOWNLOAD
                 </button>
-                <button 
+                <button
                   disabled={!currentVideo}
                   className="bg-[#7c3aed] py-6 rounded-xl font-black uppercase text-xl hover:bg-[#6d28d9] transition disabled:opacity-50 flex items-center justify-center gap-3"
                 >
@@ -982,21 +1001,29 @@ export default function App() {
             <div className="bg-zinc-950 border-2 border-[#7c3aed] rounded-3xl p-10 mb-8">
               <h3 className="text-2xl font-bold mb-6 text-white">TERMS OF SERVICE</h3>
               <div className="space-y-4 text-zinc-300 leading-relaxed">
-                <p><strong>1. Acceptance:</strong> By using MandaStrong Studio, you agree to these terms.</p>
-                <p><strong>2. License:</strong> Limited, non-exclusive license for video creation.</p>
-                <p><strong>3. User Responsibilities:</strong> Account security and content responsibility.</p>
-                <p><strong>4. Content Ownership:</strong> You retain rights to your created content.</p>
-                <p><strong>5. Prohibited Uses:</strong> No illegal content or rights violations.</p>
+                <p><strong>1. Acceptance of Terms:</strong> By accessing or using MandaStrong Studio, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. If you do not agree, you must discontinue use immediately.</p>
+                <p><strong>2. License Grant:</strong> We grant you a limited, non-exclusive, non-transferable, revocable license to use MandaStrong Studio for personal or commercial video creation purposes in accordance with these terms.</p>
+                <p><strong>3. User Account:</strong> You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. Notify us immediately of any unauthorized access.</p>
+                <p><strong>4. Content Ownership & Rights:</strong> You retain all intellectual property rights to content you create using our platform. However, you grant us a limited license to host, store, and process your content to provide the service.</p>
+                <p><strong>5. Prohibited Uses:</strong> You may not use our service to create, upload, or distribute content that is illegal, harmful, threatening, abusive, harassing, defamatory, vulgar, obscene, invasive of privacy, hateful, or racially or ethnically objectionable. Violations will result in account termination.</p>
+                <p><strong>6. Copyright & Intellectual Property:</strong> You must have all necessary rights, licenses, and permissions for any content you upload. We respect intellectual property rights and comply with DMCA requirements.</p>
+                <p><strong>7. Service Modifications:</strong> We reserve the right to modify, suspend, or discontinue any part of the service at any time with or without notice.</p>
+                <p><strong>8. Payment Terms:</strong> Subscription fees are billed in advance on a recurring basis. All fees are non-refundable except as required by law. You may cancel your subscription at any time.</p>
+                <p><strong>9. Termination:</strong> We may terminate or suspend your account immediately, without prior notice, for conduct that violates these Terms or is harmful to other users, us, or third parties.</p>
               </div>
             </div>
 
             <div className="bg-zinc-950 border-2 border-[#7c3aed] rounded-3xl p-10 mb-12">
-              <h3 className="text-2xl font-bold mb-6 text-white">DISCLAIMER</h3>
+              <h3 className="text-2xl font-bold mb-6 text-white">DISCLAIMER & LIMITATION OF LIABILITY</h3>
               <div className="space-y-4 text-zinc-300 leading-relaxed">
-                <p><strong>No Warranty:</strong> Service provided "as is" without guarantees.</p>
-                <p><strong>Limitation of Liability:</strong> Not liable for user-generated content.</p>
-                <p><strong>User Responsibility:</strong> Ensure content complies with laws.</p>
-                <p><strong>Third-Party Services:</strong> Not responsible for external integrations.</p>
+                <p><strong>No Warranty:</strong> MandaStrong Studio is provided "AS IS" and "AS AVAILABLE" without warranties of any kind, either express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, or non-infringement. We do not guarantee uninterrupted, timely, secure, or error-free service.</p>
+                <p><strong>AI-Generated Content:</strong> AI generation features are experimental and may produce unpredictable results. We make no guarantees about the quality, accuracy, or suitability of AI-generated content. You are solely responsible for reviewing and approving all content before publication or distribution.</p>
+                <p><strong>User-Generated Content:</strong> We are not liable for any user-generated content. You are solely responsible for ensuring your content complies with all applicable laws, regulations, and third-party rights.</p>
+                <p><strong>Limitation of Liability:</strong> To the fullest extent permitted by law, MandaStrong Studio, its affiliates, officers, directors, employees, and agents shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of profits, data, use, or other intangible losses resulting from your use or inability to use the service.</p>
+                <p><strong>Third-Party Services:</strong> Our service may integrate with third-party platforms (social media, payment processors, cloud storage). We are not responsible for the availability, functionality, or policies of these external services.</p>
+                <p><strong>Data Loss:</strong> While we implement reasonable security measures, we cannot guarantee complete protection against data loss, corruption, or unauthorized access. You are responsible for maintaining backup copies of your important content.</p>
+                <p><strong>Legal Compliance:</strong> You are responsible for ensuring your use of the service and your content complies with all applicable local, state, national, and international laws and regulations.</p>
+                <p><strong>Indemnification:</strong> You agree to defend, indemnify, and hold harmless MandaStrong Studio from any claims, damages, losses, liabilities, and expenses arising from your use of the service or violation of these terms.</p>
               </div>
             </div>
 
@@ -1163,24 +1190,30 @@ export default function App() {
 
         {/* PAGE 21 - THANK YOU */}
         {page === 21 && (
-          <div className="min-h-screen p-8 pt-20 pb-40">
+          <div className="min-h-screen p-8 pt-16 pb-40">
             <div className="max-w-6xl mx-auto">
-              
-              <div className="mb-16">
+
+              <div className="mb-12">
                 <video autoPlay loop muted playsInline className="w-full rounded-3xl border-4 border-[#7c3aed] shadow-2xl">
+                  <source src="/thatsallfolk.mp4" type="video/mp4"/>
                   <source src="/ThatsAllFolks.MP4" type="video/mp4"/>
+                  Your browser does not support the video tag.
                 </video>
               </div>
 
-              <h1 className="text-9xl font-black text-[#7c3aed] uppercase text-center mb-16 leading-none">THAT'S ALL FOLKS!</h1>
+              <h1 className="text-7xl md:text-9xl font-black text-[#7c3aed] uppercase text-center mb-12 leading-none">THAT'S ALL FOLKS!</h1>
 
               <div className="bg-gradient-to-br from-[#7c3aed]/20 to-[#6d28d9]/10 border-4 border-[#7c3aed] rounded-3xl p-12 mb-12">
-                <h2 className="text-4xl font-black mb-8 text-white text-center">A SPECIAL THANK YOU</h2>
+                <h2 className="text-4xl font-black mb-8 text-white text-center">FROM THE HEART</h2>
                 <div className="text-lg text-white leading-relaxed space-y-6">
-                  <p className="italic font-bold text-[#7c3aed] text-2xl">Dear Creator,</p>
-                  <p>Thank you for choosing MandaStrong Studio. This journey is more than video creation; it's about the <strong>social impact</strong> your stories will have.</p>
-                  <p>Our mission: aid schools in <strong>bullying prevention</strong> and <strong>social skills development</strong>. Your films have the power to educate, inspire, and bring awareness to critical issues.</p>
-                  <p>Thank you for being part of this mission to cultivate humanity in our communities.</p>
+                  <p className="italic font-bold text-[#7c3aed] text-2xl">Dear Visionary Creator,</p>
+                  <p>Thank you from the depths of my heart for choosing MandaStrong Studio. Your decision to use this platform means more than just creating videos—it represents a commitment to making the world a better place through the power of storytelling.</p>
+                  <p>Every video you create has the potential to touch hearts, change minds, and inspire action. Your stories can educate children, comfort the grieving, celebrate life's precious moments, and shine light on issues that matter.</p>
+                  <p>Our mission goes beyond technology. We're dedicated to <strong>supporting Veterans' mental health</strong>, <strong>helping schools prevent bullying</strong>, <strong>nurturing children's social skills and emotional intelligence</strong>, and <strong>innovating humanity</strong> through creative expression and empathy.</p>
+                  <p>When you create with MandaStrong Studio, you're not just making movies—you're contributing to a movement that believes in the transformative power of media to heal, unite, and uplift our global community.</p>
+                  <p>Your creativity matters. Your voice matters. Your stories will ripple out into the world and touch lives in ways you may never fully know.</p>
+                  <p className="text-[#7c3aed] font-bold text-xl">Thank you for being part of this beautiful journey. Together, we're building a future where every story counts and every voice is heard.</p>
+                  <p className="text-right italic">With gratitude and hope,<br/><strong className="text-[#7c3aed]">The MandaStrong Team</strong></p>
                 </div>
               </div>
 
@@ -1195,18 +1228,19 @@ export default function App() {
 
               <div className="bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] rounded-3xl p-12 text-center mb-16">
                 <h3 className="text-4xl font-black mb-6">SUPPORT VETERANS MENTAL HEALTH</h3>
-                <p className="text-2xl mb-8 font-bold">100% of Etsy Proceeds Benefit Veterans Mental Health Services</p>
+                <p className="text-2xl mb-4 font-bold">Supporting School Kids' Futures with Social Skills</p>
+                <p className="text-xl mb-8 font-semibold">Innovating Humanity Through Creativity & Compassion</p>
                 <a href="https://MandaStrong1.Etsy.com" target="_blank" rel="noopener noreferrer" className="inline-block px-16 py-6 bg-white text-[#7c3aed] rounded-full font-black text-2xl shadow-2xl hover:scale-105 transition">
                   🛍 VISIT ETSY STORE
                 </a>
               </div>
 
               <div className="flex gap-8 justify-center mb-12">
-                <button onClick={() => setPage(1)} className="px-20 py-8 bg-white text-black rounded-full font-black uppercase text-3xl hover:scale-105 transition shadow-2xl">
+                <button onClick={() => setPage(1)} className="px-20 py-8 bg-[#7c3aed] text-white rounded-full font-black uppercase text-3xl hover:scale-105 transition shadow-2xl">
                   🏠 HOME
                 </button>
-                <button onClick={() => window.close()} className="px-20 py-8 bg-red-600 text-white rounded-full font-black uppercase text-3xl hover:scale-105 transition shadow-2xl">
-                  ✕ CLOSE APP
+                <button onClick={() => window.close()} className="px-20 py-8 bg-[#7c3aed] text-white rounded-full font-black uppercase text-3xl hover:scale-105 transition shadow-2xl">
+                  ✕ EXIT
                 </button>
               </div>
 
