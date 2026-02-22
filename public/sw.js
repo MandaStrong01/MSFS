@@ -1,6 +1,15 @@
 // MandaStrong Studio Service Worker
-const CACHE_NAME = 'mandastrong-studio-v1';
-const RUNTIME_CACHE = 'mandastrong-runtime-v1';
+const CACHE_NAME = 'mandastrong-studio-v2';
+const RUNTIME_CACHE = 'mandastrong-runtime-v2';
+
+// Old cache names to remove
+const OLD_CACHES = [
+  'mandastrong-studio-v1',
+  'mandastrong-runtime-v1',
+  'manda-movies',
+  'manda-movies-v1',
+  'manda-movies-runtime'
+];
 
 // Core files to cache on install
 const PRECACHE_ASSETS = [
@@ -26,11 +35,18 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames
           .filter((cacheName) => {
+            // Keep current caches, delete everything else including old Manda Movies caches
             return cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE;
           })
-          .map((cacheName) => caches.delete(cacheName))
+          .map((cacheName) => {
+            console.log('MandaStrong Studio: Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          })
       );
-    }).then(() => self.clients.claim())
+    }).then(() => {
+      console.log('MandaStrong Studio: Service worker activated and old caches cleared');
+      return self.clients.claim();
+    })
   );
 });
 
