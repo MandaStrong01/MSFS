@@ -5,6 +5,7 @@ import { supabase } from './lib/supabase';
 import { ProfessionalMediaLibrary } from './components/ProfessionalMediaLibrary';
 import { ProfessionalTimelineEditor } from './components/ProfessionalTimelineEditor';
 import { LiveVideoPreview } from './components/LiveVideoPreview';
+import { LoadingProvider, useLoading } from './contexts/LoadingContext';
 
 const AI_TOOLS = {
   Writing: ["Text to Video","Text to Scene","Text to Animation","Text to Film","Script to Movie","Story to Video","Prompt to Video","Description to Scene","Narrative to Film","Dialogue to Animation","Plot to Video","Character to Scene","Action to Animation","Drama to Video","Comedy to Scene","Thriller to Film","Horror to Animation","Romance to Video","Sci-Fi to Scene","Fantasy to Film","Documentary Style","Commercial Creator","Trailer Maker","Music Video","Short Film Gen","Feature Film","Web Series","TV Episode","Podcast Video","Social Media","Vertical Video","Square Video","Widescreen","Ultra Wide","360 Video","VR Scene","AR Content","Hologram","Projection Map","LED Wall","Green Screen","Motion Graphics","Title Sequence","Credits Roll","Lower Thirds","Captions","Subtitles","Voiceover","Narration","Sound Design","Foley","Ambient Sound","Music Score","Theme Song","Jingle","Sound Effect","Transition Sound","Impact","Riser","Drop","Whoosh","Swoosh","Glitch","Digital","Analog","Vintage","Modern","Futuristic","Retro","Classic","Contemporary","Experimental","Abstract","Realistic","Stylized","Cartoon","Anime","3D Animation","2D Animation","Stop Motion","Claymation","Rotoscope","Motion Capture","CGI","VFX","Practical FX","Miniatures","Matte Painting","Compositing","Keying","Tracking","Stabilization","Color Grade","LUT Apply","Film Look","Digital Look","Broadcast","Cinema","IMAX","Anamorphic","Spherical","Wide Angle","Telephoto","Macro","Tilt Shift","Fisheye","Drone Shot","Aerial View","Birds Eye","Worms Eye","POV","First Person","Third Person","Isometric","Top Down","Side Scroller","Parallax","Ken Burns","Time Lapse","Hyperlapse"],
@@ -16,7 +17,8 @@ const AI_TOOLS = {
 
 const ENHANCEMENT_TOOLS = ["AI 8K Upscaling","Cinematic Grain","Motion Stabilization","Deep HDR Boost","Face Retouch Pro","Neural Noise Reduction","Auto Color Balance","Dynamic Range Expansion","Lens Flare Synth","Shadow Recovery","Highlight Rolloff","Skin Tone Uniformity","Optical Flow Smooth","Atmospheric Haze","Sharpen Intelligence","De-Banding Pro","Moire Removal","Color Space Transform","Anamorphic Stretch","Flicker Reduction","Low Light Clarity","Texture Enhancement","Micro-Contrast Adjust","Vignette Pro","Film Stock Emulation","Glow Synthesis","Edge Refinement","Smart Saturation","Tone Mapping Pro","Gamma Correction","Black Point Calibration","White Balance AI","Color Match Pro","Temporal Denoise","Digital Intermediate","Chromatic Correction","Film Grain Advanced","Halation Effect","Bloom Control","Light Wrap"];
 
-export default function App() {
+function AppContent() {
+  const { showLoading, hideLoading } = useLoading();
   const [page, setPage] = useState(1);
   const [menuOpen, setMenuOpen] = useState(false);
   const [toolSearch, setToolSearch] = useState('');
@@ -274,6 +276,7 @@ export default function App() {
     }
 
     const files = Array.from(e.target.files);
+    showLoading(`Uploading ${files.length} file${files.length > 1 ? 's' : ''} to media library...`);
 
     for (const file of files) {
       try {
@@ -337,7 +340,8 @@ export default function App() {
       }
     }
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, [user, guestMode]);
+    hideLoading();
+  }, [user, guestMode, showLoading, hideLoading]);
 
   const handleAIGenerate = useCallback(() => {
     if (guestMode) {
@@ -354,6 +358,7 @@ export default function App() {
     if (!aiPrompt.trim()) return;
 
     setGenerating(true);
+    showLoading(`Generating ${selectedTool || 'content'} with AI...`);
     setTimeout(() => {
       const type = selectedTool && (selectedTool.toLowerCase().includes('voice') || selectedTool.toLowerCase().includes('speech')) ? 'audio' : selectedTool && selectedTool.toLowerCase().includes('image') ? 'image' : 'video';
       const newAsset = {
@@ -369,10 +374,11 @@ export default function App() {
       };
       setMediaLibrary(prev => [...prev, newAsset]);
       setGenerating(false);
+      hideLoading();
       setAiPrompt('');
       setSelectedTool(null);
     }, 2000);
-  }, [aiPrompt, selectedTool, guestMode, userProfile]);
+  }, [aiPrompt, selectedTool, guestMode, userProfile, showLoading, hideLoading]);
 
   // DRAG & DROP TO TIMELINE
   const handleDrop = useCallback((track) => {
@@ -436,6 +442,7 @@ export default function App() {
 
     setRendering(true);
     setRenderProgress(0);
+    showLoading(`Rendering video in ${exportSettings.quality} quality...`);
 
     const interval = setInterval(() => {
       setRenderProgress(prev => {
@@ -458,6 +465,7 @@ export default function App() {
             setCurrentVideo(renderedVideo);
             setRendering(false);
             setRenderProgress(0);
+            hideLoading();
             setPage(16);
           }, 500);
           return 100;
@@ -490,23 +498,27 @@ export default function App() {
     ));
   }, []);
 
-  const handleComment = useCallback((postId) => {
+  const handleComment = useCallback(async (postId) => {
     const comment = newComment[postId];
     if (!comment || !comment.trim()) return;
-    
-    setCommunityPosts(prev => prev.map(post => 
-      post.id === postId ? { 
-        ...post, 
-        comments: [...(post.comments || []), { 
-          id: Date.now(), 
-          text: comment, 
-          user: 'You', 
-          timestamp: new Date().toISOString() 
+
+    showLoading('Posting comment...');
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    setCommunityPosts(prev => prev.map(post =>
+      post.id === postId ? {
+        ...post,
+        comments: [...(post.comments || []), {
+          id: Date.now(),
+          text: comment,
+          user: 'You',
+          timestamp: new Date().toISOString()
         }] 
       } : post
     ));
     setNewComment(prev => ({ ...prev, [postId]: '' }));
-  }, [newComment]);
+    hideLoading();
+  }, [newComment, showLoading, hideLoading]);
 
   return (
     <div className="min-h-screen bg-black text-white relative">
@@ -1735,5 +1747,13 @@ export default function App() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <LoadingProvider>
+      <AppContent />
+    </LoadingProvider>
   );
 }

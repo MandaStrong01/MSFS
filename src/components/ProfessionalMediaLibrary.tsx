@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, Video, Music, Image as ImageIcon, FileText, Trash2, Play, Search, Grid3x3, List } from 'lucide-react';
+import { useLoading } from '../contexts/LoadingContext';
 
 interface MediaAsset {
   id: string | number;
@@ -28,6 +29,7 @@ export const ProfessionalMediaLibrary: React.FC<ProfessionalMediaLibraryProps> =
   onFileUpload,
   guestMode
 }) => {
+  const { showLoading, hideLoading } = useLoading();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'video' | 'audio' | 'image' | 'text'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -40,13 +42,16 @@ export const ProfessionalMediaLibrary: React.FC<ProfessionalMediaLibraryProps> =
     return matchesSearch && matchesType;
   });
 
-  const handleDeleteAsset = (assetId: string | number) => {
+  const handleDeleteAsset = async (assetId: string | number) => {
     if (guestMode) {
       alert('Cannot delete in guest mode');
       return;
     }
     if (confirm('Delete this asset?')) {
+      showLoading('Deleting asset from media library...');
+      await new Promise(resolve => setTimeout(resolve, 500));
       setMediaLibrary(mediaLibrary.filter(a => a.id !== assetId));
+      hideLoading();
     }
   };
 
