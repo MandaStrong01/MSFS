@@ -2,6 +2,9 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Menu, Sparkles, MessageCircle, ChevronLeft, ChevronRight, CheckCircle, Play, Upload, Film, Mic, Zap, Shield, Music, Sliders, Database, FileVideo, TrendingUp, BookOpen, Clock, ThumbsUp, Heart, HelpCircle, Plus, Settings, Eye, Layers, X, Download, Save, Wand2, Trash2, Share2, Search } from 'lucide-react';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import { supabase } from './lib/supabase';
+import { ProfessionalMediaLibrary } from './components/ProfessionalMediaLibrary';
+import { ProfessionalTimelineEditor } from './components/ProfessionalTimelineEditor';
+import { LiveVideoPreview } from './components/LiveVideoPreview';
 
 const AI_TOOLS = {
   Writing: ["Text to Video","Text to Scene","Text to Animation","Text to Film","Script to Movie","Story to Video","Prompt to Video","Description to Scene","Narrative to Film","Dialogue to Animation","Plot to Video","Character to Scene","Action to Animation","Drama to Video","Comedy to Scene","Thriller to Film","Horror to Animation","Romance to Video","Sci-Fi to Scene","Fantasy to Film","Documentary Style","Commercial Creator","Trailer Maker","Music Video","Short Film Gen","Feature Film","Web Series","TV Episode","Podcast Video","Social Media","Vertical Video","Square Video","Widescreen","Ultra Wide","360 Video","VR Scene","AR Content","Hologram","Projection Map","LED Wall","Green Screen","Motion Graphics","Title Sequence","Credits Roll","Lower Thirds","Captions","Subtitles","Voiceover","Narration","Sound Design","Foley","Ambient Sound","Music Score","Theme Song","Jingle","Sound Effect","Transition Sound","Impact","Riser","Drop","Whoosh","Swoosh","Glitch","Digital","Analog","Vintage","Modern","Futuristic","Retro","Classic","Contemporary","Experimental","Abstract","Realistic","Stylized","Cartoon","Anime","3D Animation","2D Animation","Stop Motion","Claymation","Rotoscope","Motion Capture","CGI","VFX","Practical FX","Miniatures","Matte Painting","Compositing","Keying","Tracking","Stabilization","Color Grade","LUT Apply","Film Look","Digital Look","Broadcast","Cinema","IMAX","Anamorphic","Spherical","Wide Angle","Telephoto","Macro","Tilt Shift","Fisheye","Drone Shot","Aerial View","Birds Eye","Worms Eye","POV","First Person","Third Person","Isometric","Top Down","Side Scroller","Parallax","Ken Burns","Time Lapse","Hyperlapse"],
@@ -39,6 +42,8 @@ export default function App() {
   const [guestMode, setGuestMode] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
@@ -228,6 +233,29 @@ export default function App() {
     setPage(1);
   };
 
+  const handleTimelineDrop = (e: React.DragEvent, track: string, time: number) => {
+    e.preventDefault();
+    if (!draggedItem || guestMode) return;
+
+    const newClip = {
+      id: Date.now() + Math.random(),
+      assetId: draggedItem.id,
+      track: track,
+      startTime: time,
+      duration: draggedItem.duration || 5,
+      name: draggedItem.name,
+      url: draggedItem.url,
+      type: draggedItem.type
+    };
+
+    setTimeline(prev => ({
+      ...prev,
+      [track]: [...prev[track], newClip]
+    }));
+
+    setDraggedItem(null);
+  };
+
   const handleFileUpload = useCallback(async (e) => {
     if (guestMode) {
       alert('Please login to upload files. You are in Browse-Only mode.');
@@ -309,12 +337,14 @@ export default function App() {
 
     setGenerating(true);
     setTimeout(() => {
+      const type = selectedTool && (selectedTool.toLowerCase().includes('voice') || selectedTool.toLowerCase().includes('speech')) ? 'audio' : selectedTool && selectedTool.toLowerCase().includes('image') ? 'image' : 'video';
       const newAsset = {
         id: Date.now(),
-        name: `AI-${selectedTool.replace(/\s+/g,'-').toLowerCase()}-${Date.now()}.mp4`,
-        type: 'video',
+        name: `AI-${selectedTool.replace(/\s+/g,'-').toLowerCase()}-${Date.now()}.${type === 'audio' ? 'mp3' : type === 'image' ? 'jpg' : 'mp4'}`,
+        type: type,
         size: (Math.random() * 500 + 100).toFixed(2) + 'MB',
-        url: `data:video/mp4;base64,SIMULATED_AI_GENERATED_CONTENT`,
+        url: `data:${type === 'audio' ? 'audio' : type === 'image' ? 'image' : 'video'}/${type === 'audio' ? 'mp3' : type === 'image' ? 'jpeg' : 'mp4'};base64,SIMULATED_AI_GENERATED_CONTENT`,
+        duration: type === 'image' ? 5 : Math.floor(Math.random() * 30) + 10,
         aiGenerated: true,
         prompt: aiPrompt,
         timestamp: new Date().toISOString()
@@ -997,118 +1027,53 @@ export default function App() {
           </div>
         )}
 
-        {/* PAGE 12 - MEDIA LIBRARY & TIMELINE (WORKING DRAG & DROP) */}
+        {/* PAGE 12 - PROFESSIONAL MEDIA LIBRARY & TIMELINE */}
         {page === 12 && (
-          <div className="min-h-screen flex pb-32">
-            <div className="w-1/3 bg-zinc-950 border-r-4 border-[#7c3aed] p-6 overflow-y-auto scrollbar">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-black uppercase text-white flex items-center gap-3">
-                  <Database size={24} className="text-[#7c3aed]"/>
-                  MEDIA LIBRARY
-                </h3>
-                <button onClick={() => fileInputRef.current?.click()} className="bg-[#7c3aed] p-2 rounded-lg hover:bg-[#6d28d9] transition">
-                  <Plus size={20}/>
-                </button>
+          <div className="min-h-screen flex flex-col pb-32 pt-20 px-6 gap-6">
+            <h1 className="text-4xl font-black uppercase text-white text-center mb-4">
+              PROFESSIONAL EDITOR SUITE
+            </h1>
+
+            <div className="flex gap-6 flex-1">
+              {/* Media Library - Left Side */}
+              <div className="w-1/3 min-w-[400px] h-[calc(100vh-250px)]">
+                <ProfessionalMediaLibrary
+                  mediaLibrary={mediaLibrary}
+                  setMediaLibrary={setMediaLibrary}
+                  onDragStart={setDraggedItem}
+                  onFileUpload={handleFileUpload}
+                  guestMode={guestMode}
+                />
               </div>
-              {mediaLibrary.length === 0 ? (
-                <div className="text-center py-12">
-                  <Upload size={48} className="text-zinc-700 mx-auto mb-4"/>
-                  <p className="text-zinc-500 text-sm">No assets yet</p>
-                  <button onClick={() => setPage(10)} className="text-[#7c3aed] text-xs mt-2 underline">Upload Media</button>
+
+              {/* Right Side - Preview and Timeline */}
+              <div className="flex-1 flex flex-col gap-6">
+                {/* Live Preview - Top */}
+                <div className="h-[50%] min-h-[400px]">
+                  <LiveVideoPreview
+                    timeline={timeline}
+                    currentTime={currentTime}
+                    isPlaying={isPlaying}
+                    setIsPlaying={setIsPlaying}
+                    duration={duration}
+                  />
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {mediaLibrary.map((asset) => (
-                    <div 
-                      key={asset.id} 
-                      draggable
-                      onDragStart={() => setDraggedItem(asset)}
-                      onDragEnd={() => setDraggedItem(null)}
-                      className="bg-zinc-900 border-2 border-[#7c3aed] p-4 rounded-xl hover:bg-[#7c3aed]/20 cursor-move transition group"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex-1">
-                          <div className="text-sm font-bold text-white truncate">{asset.name}</div>
-                          <div className="text-xs text-zinc-500 flex gap-2 mt-1">
-                            <span>{asset.type}</span>
-                            <span>•</span>
-                            <span>{asset.size}</span>
-                          </div>
-                        </div>
-                        <button onClick={() => deleteFromLibrary(asset.id)} className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-400 transition">
-                          <Trash2 size={16}/>
-                        </button>
-                      </div>
-                      {asset.aiGenerated && (
-                        <div className="text-xs bg-[#7c3aed] text-white px-2 py-1 rounded inline-block mt-2">
-                          🤖 AI Generated
-                        </div>
-                      )}
-                      {asset.enhanced && (
-                        <div className="text-xs bg-[#7c3aed] text-white px-2 py-1 rounded inline-block mt-2">
-                          ✨ Enhanced
-                        </div>
-                      )}
-                    </div>
-                  ))}
+
+                {/* Timeline Editor - Bottom */}
+                <div className="h-[50%] min-h-[400px]">
+                  <ProfessionalTimelineEditor
+                    timeline={timeline}
+                    setTimeline={setTimeline}
+                    duration={duration}
+                    setDuration={setDuration}
+                    onDrop={handleTimelineDrop}
+                    currentTime={currentTime}
+                    setCurrentTime={setCurrentTime}
+                    isPlaying={isPlaying}
+                    setIsPlaying={setIsPlaying}
+                    guestMode={guestMode}
+                  />
                 </div>
-              )}
-            </div>
-            <div className="flex-1 flex flex-col">
-              <div className="flex-1 bg-black flex items-center justify-center">
-                {currentVideo ? (
-                  <div className="text-center">
-                    <div className="w-96 h-96 rounded-full bg-[#7c3aed]/30 flex items-center justify-center mb-6">
-                      <Play size={120} className="text-[#7c3aed]"/>
-                    </div>
-                    <p className="text-white font-bold">{currentVideo.name}</p>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <div className="w-48 h-48 rounded-full bg-[#7c3aed]/30 flex items-center justify-center">
-                      <Play size={80} className="text-[#7c3aed]"/>
-                    </div>
-                    <p className="text-zinc-500 mt-4">No video selected</p>
-                  </div>
-                )}
-              </div>
-              <div className="bg-zinc-950 p-6 border-t-4 border-[#7c3aed]">
-                <h3 className="text-2xl font-black uppercase text-[#7c3aed] mb-6">MULTI-TRACK TIMELINE</h3>
-                <div className="space-y-3">
-                  {[
-                    { key: 'video', label: 'VIDEO TRACK', icon: FileVideo },
-                    { key: 'audio', label: 'AUDIO TRACK', icon: Music },
-                    { key: 'text', label: 'TEXT OVERLAY', icon: Layers }
-                  ].map(track => (
-                    <div 
-                      key={track.key}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={() => handleDrop(track.key)}
-                      className="bg-black border-2 border-[#7c3aed] rounded-xl min-h-[80px] p-4 hover:bg-[#7c3aed]/10 transition"
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <div className="flex items-center gap-2">
-                          <track.icon size={18} className="text-[#7c3aed]"/>
-                          <span className="text-sm font-bold text-white">{track.label}</span>
-                        </div>
-                        <span className="text-xs text-zinc-500">{timeline[track.key].length} clips</span>
-                      </div>
-                      {timeline[track.key].length > 0 && (
-                        <div className="flex gap-2 overflow-x-auto mt-2">
-                          {timeline[track.key].map((item, idx) => (
-                            <div key={idx} className="bg-[#7c3aed] px-3 py-2 rounded text-xs font-bold whitespace-nowrap flex items-center gap-2">
-                              {item.name.substring(0, 15)}...
-                              <button onClick={() => removeFromTimeline(track.key, idx)} className="hover:text-red-400">
-                                <X size={12}/>
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-zinc-500 mt-4 italic text-center">Drag assets from Media Library to timeline tracks</p>
               </div>
             </div>
           </div>
