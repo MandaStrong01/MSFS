@@ -39,6 +39,7 @@ export default function App() {
   const [communityPosts, setCommunityPosts] = useState([]);
   const [newComment, setNewComment] = useState({});
   const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const [guestMode, setGuestMode] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -62,6 +63,16 @@ export default function App() {
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     setUser(session?.user || null);
+
+    if (session?.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .maybeSingle();
+      setUserProfile(profile);
+    }
+
     setLoading(false);
   };
 
@@ -333,6 +344,13 @@ export default function App() {
       alert('Please login to use AI generation. You are in Browse-Only mode.');
       return;
     }
+
+    const plan = userProfile?.plan || 'basic';
+    if (plan === 'basic') {
+      alert('AI Generation is only available for Pro, Studio, and Admin plans. Please upgrade to access this feature.');
+      return;
+    }
+
     if (!aiPrompt.trim()) return;
 
     setGenerating(true);
@@ -354,7 +372,7 @@ export default function App() {
       setAiPrompt('');
       setSelectedTool(null);
     }, 2000);
-  }, [aiPrompt, selectedTool, guestMode]);
+  }, [aiPrompt, selectedTool, guestMode, userProfile]);
 
   // DRAG & DROP TO TIMELINE
   const handleDrop = useCallback((track) => {
@@ -401,6 +419,21 @@ export default function App() {
       alert('Please login to render videos. You are in Browse-Only mode.');
       return;
     }
+
+    const plan = userProfile?.plan || 'basic';
+    const qualityMap = {
+      'basic': ['720p', '1080p'],
+      'pro': ['720p', '1080p', '4K'],
+      'studio': ['720p', '1080p', '4K', '8K'],
+      'admin': ['720p', '1080p', '4K', '8K']
+    };
+
+    const allowedQualities = qualityMap[plan] || qualityMap['basic'];
+    if (!allowedQualities.includes(exportSettings.quality)) {
+      alert(`${exportSettings.quality} export is only available for ${exportSettings.quality === '4K' ? 'Pro, Studio, and Admin' : 'Studio and Admin'} plans. Please upgrade or select a lower quality.`);
+      return;
+    }
+
     setRendering(true);
     setRenderProgress(0);
 
@@ -411,7 +444,7 @@ export default function App() {
           setTimeout(() => {
             const renderedVideo = {
               id: Date.now(),
-              name: `final-render-${Date.now()}.${exportSettings.format.toLowerCase()}`,
+              name: `MandaStrong-Studio-${Date.now()}.${exportSettings.format.toLowerCase()}`,
               type: 'video',
               size: (Math.random() * 1000 + 500).toFixed(2) + 'MB',
               url: `data:video/${exportSettings.format.toLowerCase()};base64,RENDERED_CONTENT`,
@@ -432,14 +465,16 @@ export default function App() {
         return prev + 5;
       });
     }, 100);
-  }, [duration, exportSettings, guestMode]);
+  }, [duration, exportSettings, guestMode, userProfile]);
 
   // DOWNLOAD FILE
   const handleDownload = useCallback((asset) => {
     const link = document.createElement('a');
     link.href = asset.url;
-    link.download = asset.name;
+    link.download = asset.name || 'MandaStrong-Studio-Export.mp4';
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   }, []);
 
   // COMMUNITY INTERACTIONS
