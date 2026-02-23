@@ -1,6 +1,7 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Menu, Sparkles, MessageCircle, ChevronLeft, ChevronRight, CheckCircle, Play, Upload, Film, Mic, Zap, Shield, Music, Sliders, Database, FileVideo, TrendingUp, BookOpen, Clock, ThumbsUp, Heart, HelpCircle, Plus, Settings, Eye, Layers, X, Download, Save, Wand2, Trash2, Share2, Search } from 'lucide-react';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
+import { supabase } from './lib/supabase';
 
 const AI_TOOLS = {
   Writing: ["Text to Video","Text to Scene","Text to Animation","Text to Film","Script to Movie","Story to Video","Prompt to Video","Description to Scene","Narrative to Film","Dialogue to Animation","Plot to Video","Character to Scene","Action to Animation","Drama to Video","Comedy to Scene","Thriller to Film","Horror to Animation","Romance to Video","Sci-Fi to Scene","Fantasy to Film","Documentary Style","Commercial Creator","Trailer Maker","Music Video","Short Film Gen","Feature Film","Web Series","TV Episode","Podcast Video","Social Media","Vertical Video","Square Video","Widescreen","Ultra Wide","360 Video","VR Scene","AR Content","Hologram","Projection Map","LED Wall","Green Screen","Motion Graphics","Title Sequence","Credits Roll","Lower Thirds","Captions","Subtitles","Voiceover","Narration","Sound Design","Foley","Ambient Sound","Music Score","Theme Song","Jingle","Sound Effect","Transition Sound","Impact","Riser","Drop","Whoosh","Swoosh","Glitch","Digital","Analog","Vintage","Modern","Futuristic","Retro","Classic","Contemporary","Experimental","Abstract","Realistic","Stylized","Cartoon","Anime","3D Animation","2D Animation","Stop Motion","Claymation","Rotoscope","Motion Capture","CGI","VFX","Practical FX","Miniatures","Matte Painting","Compositing","Keying","Tracking","Stabilization","Color Grade","LUT Apply","Film Look","Digital Look","Broadcast","Cinema","IMAX","Anamorphic","Spherical","Wide Angle","Telephoto","Macro","Tilt Shift","Fisheye","Drone Shot","Aerial View","Birds Eye","Worms Eye","POV","First Person","Third Person","Isometric","Top Down","Side Scroller","Parallax","Ken Burns","Time Lapse","Hyperlapse"],
@@ -32,42 +33,280 @@ export default function App() {
   const [audioLevels, setAudioLevels] = useState({ music: 75, voice: 50, sfx: 65, master: 80 });
   const [enhancementSettings, setEnhancementSettings] = useState({ intensity: 75, clarity: 75, color: 75, brightness: 75 });
   const [exportSettings, setExportSettings] = useState({ quality: '8K', format: 'MP4' });
-  const [communityPosts, setCommunityPosts] = useState([
-    {id:1,title:'Epic Action Movie',user:'Sarah J.',emoji:'🎬',likes:2847,loves:1923,comments:[]},
-    {id:2,title:'Family Vacation',user:'Mike Chen',emoji:'✈️',likes:1256,loves:892,comments:[]},
-    {id:3,title:'First Documentary',user:'Emily R.',emoji:'📹',likes:3421,loves:2156,comments:[]},
-    {id:4,title:'Music Video',user:'Alex T.',emoji:'🎵',likes:5234,loves:4012,comments:[]}
-  ]);
+  const [communityPosts, setCommunityPosts] = useState([]);
   const [newComment, setNewComment] = useState({});
-  
+  const [user, setUser] = useState(null);
+  const [guestMode, setGuestMode] = useState(false);
+  const [currentProjectId, setCurrentProjectId] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
 
-  // REAL FILE UPLOAD
-  const handleFileUpload = useCallback((e) => {
-    const files = Array.from(e.target.files);
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const newAsset = {
-          id: Date.now() + Math.random(),
-          name: file.name,
-          type: file.type.startsWith('video') ? 'video' : file.type.startsWith('audio') ? 'audio' : 'image',
-          size: (file.size / 1024 / 1024).toFixed(2) + 'MB',
-          url: event.target.result,
-          timestamp: new Date().toISOString()
-        };
-        setMediaLibrary(prev => [...prev, newAsset]);
-      };
-      reader.readAsDataURL(file);
-    });
-    if (fileInputRef.current) fileInputRef.current.value = '';
+  useEffect(() => {
+    checkUser();
+    loadCommunityPosts();
   }, []);
 
-  // AI GENERATION
+  useEffect(() => {
+    if (user && !guestMode) {
+      loadProject();
+    }
+  }, [user, guestMode]);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setUser(session?.user || null);
+    setLoading(false);
+  };
+
+  const loadProject = async () => {
+    if (!user) return;
+
+    const { data: projects } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(1);
+
+    if (projects && projects.length > 0) {
+      const project = projects[0];
+      setCurrentProjectId(project.id);
+      setMediaLibrary(project.media_library || []);
+      setTimeline(project.timeline || { video: [], audio: [], text: [] });
+      setDuration(project.duration || 90);
+      setAudioLevels(project.audio_levels || { music: 75, voice: 50, sfx: 65, master: 80 });
+      setEnhancementSettings(project.enhancement_settings || { intensity: 75, clarity: 75, color: 75, brightness: 75 });
+      setExportSettings(project.export_settings || { quality: '8K', format: 'MP4' });
+    } else {
+      await createNewProject();
+    }
+  };
+
+  const createNewProject = async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('projects')
+      .insert({
+        user_id: user.id,
+        name: 'MandaStrong Studio Project',
+        media_library: [],
+        timeline: { video: [], audio: [], text: [] },
+        duration: 90
+      })
+      .select()
+      .single();
+
+    if (data) {
+      setCurrentProjectId(data.id);
+    }
+  };
+
+  const saveProject = async () => {
+    if (!user || !currentProjectId || guestMode) return;
+
+    await supabase
+      .from('projects')
+      .update({
+        media_library: mediaLibrary,
+        timeline: timeline,
+        duration: duration,
+        audio_levels: audioLevels,
+        enhancement_settings: enhancementSettings,
+        export_settings: exportSettings,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', currentProjectId);
+  };
+
+  const loadCommunityPosts = async () => {
+    const { data: movies } = await supabase
+      .from('movies')
+      .select(`
+        id,
+        title,
+        description,
+        thumbnail_url,
+        video_url,
+        view_count,
+        created_at,
+        profiles (
+          full_name,
+          email
+        )
+      `)
+      .eq('is_public', true)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (movies && movies.length > 0) {
+      const formatted = movies.map(movie => ({
+        id: movie.id,
+        title: movie.title,
+        user: movie.profiles?.full_name || 'Anonymous',
+        emoji: '🎬',
+        likes: Math.floor(Math.random() * 5000),
+        loves: Math.floor(Math.random() * 3000),
+        comments: [],
+        videoUrl: movie.video_url,
+        thumbnailUrl: movie.thumbnail_url
+      }));
+      setCommunityPosts(formatted);
+    } else {
+      setCommunityPosts([
+        {id:1,title:'Epic Action Movie',user:'Sarah J.',emoji:'🎬',likes:2847,loves:1923,comments:[]},
+        {id:2,title:'Family Vacation',user:'Mike Chen',emoji:'✈️',likes:1256,loves:892,comments:[]},
+        {id:3,title:'First Documentary',user:'Emily R.',emoji:'📹',likes:3421,loves:2156,comments:[]},
+        {id:4,title:'Music Video',user:'Alex T.',emoji:'🎵',likes:5234,loves:4012,comments:[]}
+      ]);
+    }
+  };
+
+  useEffect(() => {
+    if (user && !guestMode) {
+      const saveInterval = setInterval(() => {
+        saveProject();
+      }, 30000);
+      return () => clearInterval(saveInterval);
+    }
+  }, [mediaLibrary, timeline, duration, audioLevels, enhancementSettings, exportSettings, user, guestMode]);
+
+  const handleLogin = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      setUser(data.user);
+      setGuestMode(false);
+      setPage(4);
+    } catch (error) {
+      alert('Login failed: ' + error.message);
+    }
+  };
+
+  const handleRegister = async (name: string, email: string, password: string) => {
+    try {
+      if (password.length < 8) {
+        alert('Password must be at least 8 characters');
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: name }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        await supabase.from('profiles').insert({
+          id: data.user.id,
+          email: email,
+          full_name: name
+        });
+
+        alert('Registration successful! You can now login.');
+      }
+    } catch (error) {
+      alert('Registration failed: ' + error.message);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setGuestMode(false);
+    setPage(1);
+  };
+
+  const handleFileUpload = useCallback(async (e) => {
+    if (guestMode) {
+      alert('Please login to upload files. You are in Browse-Only mode.');
+      return;
+    }
+
+    const files = Array.from(e.target.files);
+
+    for (const file of files) {
+      try {
+        if (user && !guestMode) {
+          try {
+            const fileName = `${user.id}/${Date.now()}-${file.name}`;
+            const { data, error } = await supabase.storage
+              .from('media')
+              .upload(fileName, file);
+
+            if (error) throw error;
+
+            const { data: { publicUrl } } = supabase.storage
+              .from('media')
+              .getPublicUrl(fileName);
+
+            const newAsset = {
+              id: Date.now() + Math.random(),
+              name: file.name,
+              type: file.type.startsWith('video') ? 'video' : file.type.startsWith('audio') ? 'audio' : 'image',
+              size: (file.size / 1024 / 1024).toFixed(2) + 'MB',
+              url: publicUrl,
+              storagePath: fileName,
+              timestamp: new Date().toISOString()
+            };
+            setMediaLibrary(prev => [...prev, newAsset]);
+          } catch (storageError) {
+            console.warn('Storage upload failed, using local storage:', storageError);
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const newAsset = {
+                id: Date.now() + Math.random(),
+                name: file.name,
+                type: file.type.startsWith('video') ? 'video' : file.type.startsWith('audio') ? 'audio' : 'image',
+                size: (file.size / 1024 / 1024).toFixed(2) + 'MB',
+                url: event.target.result,
+                timestamp: new Date().toISOString()
+              };
+              setMediaLibrary(prev => [...prev, newAsset]);
+            };
+            reader.readAsDataURL(file);
+          }
+        } else {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const newAsset = {
+              id: Date.now() + Math.random(),
+              name: file.name,
+              type: file.type.startsWith('video') ? 'video' : file.type.startsWith('audio') ? 'audio' : 'image',
+              size: (file.size / 1024 / 1024).toFixed(2) + 'MB',
+              url: event.target.result,
+              timestamp: new Date().toISOString()
+            };
+            setMediaLibrary(prev => [...prev, newAsset]);
+          };
+          reader.readAsDataURL(file);
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        alert('Failed to upload file: ' + error.message);
+      }
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }, [user, guestMode]);
+
   const handleAIGenerate = useCallback(() => {
+    if (guestMode) {
+      alert('Please login to use AI generation. You are in Browse-Only mode.');
+      return;
+    }
     if (!aiPrompt.trim()) return;
-    
+
     setGenerating(true);
     setTimeout(() => {
       const newAsset = {
@@ -85,7 +324,7 @@ export default function App() {
       setAiPrompt('');
       setSelectedTool(null);
     }, 2000);
-  }, [aiPrompt, selectedTool]);
+  }, [aiPrompt, selectedTool, guestMode]);
 
   // DRAG & DROP TO TIMELINE
   const handleDrop = useCallback((track) => {
@@ -127,11 +366,14 @@ export default function App() {
     setSelectedEnhancement(null);
   }, [selectedEnhancement, enhancementSettings]);
 
-  // RENDER VIDEO
   const handleRender = useCallback(() => {
+    if (guestMode) {
+      alert('Please login to render videos. You are in Browse-Only mode.');
+      return;
+    }
     setRendering(true);
     setRenderProgress(0);
-    
+
     const interval = setInterval(() => {
       setRenderProgress(prev => {
         if (prev >= 100) {
@@ -160,7 +402,7 @@ export default function App() {
         return prev + 5;
       });
     }, 100);
-  }, [duration, exportSettings]);
+  }, [duration, exportSettings, guestMode]);
 
   // DOWNLOAD FILE
   const handleDownload = useCallback((asset) => {
@@ -233,6 +475,28 @@ export default function App() {
           </button>
           {menuOpen && (
             <div className="absolute top-20 left-0 bg-zinc-950 border border-[#7c3aed] p-6 rounded-2xl w-72 shadow-2xl max-h-[80vh] overflow-y-auto scrollbar">
+              <div className="mb-4 pb-4 border-b border-[#7c3aed]">
+                {user ? (
+                  <div>
+                    <p className="text-sm text-zinc-400">Logged in as:</p>
+                    <p className="text-sm font-bold text-[#7c3aed] mb-2">{user.email}</p>
+                    <button onClick={() => {handleLogout(); setMenuOpen(false);}} className="w-full bg-red-600 py-2 rounded-lg font-bold text-white hover:bg-red-700 transition text-xs">
+                      LOGOUT
+                    </button>
+                  </div>
+                ) : guestMode ? (
+                  <div>
+                    <p className="text-sm text-yellow-400 mb-2">GUEST MODE</p>
+                    <button onClick={() => {setPage(3); setMenuOpen(false);}} className="w-full bg-[#7c3aed] py-2 rounded-lg font-bold text-white hover:bg-[#6d28d9] transition text-xs">
+                      LOGIN TO CREATE
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => {setPage(3); setMenuOpen(false);}} className="w-full bg-[#7c3aed] py-2 rounded-lg font-bold text-white hover:bg-[#6d28d9] transition text-xs">
+                    LOGIN
+                  </button>
+                )}
+              </div>
               <h3 className="text-lg font-black uppercase mb-4 text-[#7c3aed]">Quick Access</h3>
               {[
                 {p:1,l:"Home"},{p:2,l:"Welcome"},{p:3,l:"Login/Pricing"},{p:4,l:"Writing Tools"},{p:5,l:"Voice Tools"},
@@ -253,6 +517,16 @@ export default function App() {
       {/* Grok G Button */}
       {page >= 1 && page !== 19 && (
         <button onClick={() => setPage(19)} className="fixed bottom-6 right-6 z-50 bg-[#7c3aed] w-16 h-16 rounded-full flex items-center justify-center text-4xl font-black shadow-2xl hover:scale-110 transition border-2 border-[#a78bfa]">G</button>
+      )}
+
+      {/* Guest Mode Banner */}
+      {guestMode && page >= 4 && (
+        <div className="fixed top-0 left-0 w-full bg-yellow-600 py-3 text-center z-50 border-b-2 border-yellow-400">
+          <p className="text-sm uppercase font-black text-black">
+            GUEST MODE - VIEW ONLY •
+            <button onClick={() => setPage(3)} className="ml-2 underline hover:text-white">LOGIN TO CREATE</button>
+          </p>
+        </div>
       )}
 
       {/* Footer */}
@@ -296,20 +570,109 @@ export default function App() {
         )}
 
         {/* PAGE 3 - LOGIN & PRICING */}
-        {page === 3 && (
+        {page === 3 && user && !loading && (
+          <div className="h-screen flex items-center justify-center">
+            <div className="text-center">
+              <h2 className="text-4xl font-black text-[#7c3aed] mb-8">WELCOME BACK!</h2>
+              <p className="text-2xl text-white mb-12">You are already logged in</p>
+              <div className="flex gap-6 justify-center">
+                <button onClick={() => setPage(4)} className="bg-[#7c3aed] px-16 py-6 rounded-full font-black uppercase text-xl hover:bg-[#6d28d9] transition">
+                  CONTINUE TO STUDIO
+                </button>
+                <button onClick={handleLogout} className="bg-red-600 px-16 py-6 rounded-full font-black uppercase text-xl hover:bg-red-700 transition">
+                  LOGOUT
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {page === 3 && !user && !loading && (
           <div className="p-6 pt-16 pb-40 max-w-7xl mx-auto overflow-y-auto scrollbar">
+            <div className="text-center mb-12">
+              <button
+                onClick={() => {
+                  setGuestMode(true);
+                  setPage(4);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 px-16 py-6 rounded-full font-black uppercase text-2xl transition inline-flex items-center gap-4 shadow-2xl border-4 border-blue-400"
+              >
+                <Eye size={32} />
+                BROWSE FIRST (VIEW ONLY)
+              </button>
+              <p className="text-zinc-400 text-lg mt-4 font-bold">Explore the studio without creating an account</p>
+            </div>
+
+            <div className="flex items-center justify-center gap-4 mb-12">
+              <div className="h-px bg-zinc-700 flex-1 max-w-sm" />
+              <span className="text-zinc-400 text-xl font-bold">OR LOGIN TO CREATE</span>
+              <div className="h-px bg-zinc-700 flex-1 max-w-sm" />
+            </div>
+
             <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-16">
               <div className="bg-zinc-950 border-2 border-[#7c3aed] p-10 rounded-3xl">
                 <h3 className="text-3xl font-black uppercase mb-6 text-center text-white">Login</h3>
-                <input type="email" placeholder="your@email.com" className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-4 outline-none"/>
-                <input type="password" placeholder="••••••••" className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-6 outline-none"/>
-                <button onClick={() => setPage(4)} className="w-full bg-[#7c3aed] py-4 rounded-xl font-black uppercase hover:bg-[#6d28d9] transition">Login & Start</button>
+                <input
+                  id="login-email"
+                  type="email"
+                  placeholder="your@email.com"
+                  className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-4 outline-none"
+                />
+                <input
+                  id="login-password"
+                  type="password"
+                  placeholder="••••••••"
+                  className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-6 outline-none"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      const email = (document.getElementById('login-email') as HTMLInputElement).value;
+                      const password = (document.getElementById('login-password') as HTMLInputElement).value;
+                      handleLogin(email, password);
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    const email = (document.getElementById('login-email') as HTMLInputElement).value;
+                    const password = (document.getElementById('login-password') as HTMLInputElement).value;
+                    handleLogin(email, password);
+                  }}
+                  className="w-full bg-[#7c3aed] py-4 rounded-xl font-black uppercase hover:bg-[#6d28d9] transition"
+                >
+                  Login & Start
+                </button>
               </div>
               <div className="bg-zinc-950 border-2 border-[#7c3aed] p-10 rounded-3xl">
                 <h3 className="text-3xl font-black uppercase mb-6 text-center text-white">Register</h3>
-                <input type="text" placeholder="Your Name" className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-4 outline-none"/>
-                <input type="email" placeholder="your@email.com" className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-4 outline-none"/>
-                <button onClick={() => setPage(4)} className="w-full bg-[#7c3aed] py-4 rounded-xl font-black uppercase hover:bg-[#6d28d9] transition">Create Account</button>
+                <input
+                  id="register-name"
+                  type="text"
+                  placeholder="Your Name"
+                  className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-4 outline-none"
+                />
+                <input
+                  id="register-email"
+                  type="email"
+                  placeholder="your@email.com"
+                  className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-4 outline-none"
+                />
+                <input
+                  id="register-password"
+                  type="password"
+                  placeholder="••••••••"
+                  className="w-full bg-black border-2 border-[#7c3aed] p-4 rounded-xl text-white mb-6 outline-none"
+                />
+                <button
+                  onClick={() => {
+                    const name = (document.getElementById('register-name') as HTMLInputElement).value;
+                    const email = (document.getElementById('register-email') as HTMLInputElement).value;
+                    const password = (document.getElementById('register-password') as HTMLInputElement).value;
+                    handleRegister(name, email, password);
+                  }}
+                  className="w-full bg-[#7c3aed] py-4 rounded-xl font-black uppercase hover:bg-[#6d28d9] transition"
+                >
+                  Create Account
+                </button>
               </div>
             </div>
             <div className="max-w-6xl mx-auto">
@@ -1186,13 +1549,55 @@ export default function App() {
           <div className="min-h-screen p-8 pt-20 pb-40">
             <div className="flex justify-between items-center mb-12">
               <h1 className="text-5xl font-black uppercase text-white">COMMUNITY HUB</h1>
-              <button 
-                onClick={() => fileInputRef.current?.click()}
-                className="bg-[#7c3aed] px-8 py-4 rounded-xl font-bold flex items-center gap-3 hover:bg-[#6d28d9] transition"
-              >
-                <Upload size={24}/>
-                UPLOAD YOUR MOVIE
-              </button>
+              {user && !guestMode ? (
+                <button
+                  onClick={async () => {
+                    if (!currentVideo) {
+                      alert('Please render a video first from the Export page');
+                      return;
+                    }
+                    const title = prompt('Enter movie title:');
+                    const description = prompt('Enter movie description (optional):');
+                    if (title) {
+                      try {
+                        const { data, error } = await supabase
+                          .from('movies')
+                          .insert({
+                            user_id: user.id,
+                            title: title,
+                            description: description || '',
+                            video_url: currentVideo.url,
+                            duration: duration,
+                            is_public: true
+                          })
+                          .select()
+                          .single();
+
+                        if (error) throw error;
+                        alert('Movie uploaded to community!');
+                        loadCommunityPosts();
+                      } catch (error) {
+                        alert('Upload failed: ' + error.message);
+                      }
+                    }
+                  }}
+                  className="bg-[#7c3aed] px-8 py-4 rounded-xl font-bold flex items-center gap-3 hover:bg-[#6d28d9] transition"
+                >
+                  <Upload size={24}/>
+                  SHARE YOUR MOVIE
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    alert('Please login to share movies to the community');
+                    setPage(3);
+                  }}
+                  className="bg-zinc-700 px-8 py-4 rounded-xl font-bold flex items-center gap-3 cursor-not-allowed opacity-50"
+                >
+                  <Upload size={24}/>
+                  LOGIN TO SHARE
+                </button>
+              )}
             </div>
 
             <div className="grid md:grid-cols-2 gap-8 max-w-7xl mx-auto">
