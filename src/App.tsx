@@ -6,6 +6,7 @@ import { ProfessionalMediaLibrary } from './components/ProfessionalMediaLibrary'
 import { ProfessionalTimelineEditor } from './components/ProfessionalTimelineEditor';
 import { LiveVideoPreview } from './components/LiveVideoPreview';
 import { LoadingProvider, useLoading } from './contexts/LoadingContext';
+import { getDeploymentInfo, isBoltEnvironment } from './lib/deployment';
 
 const AI_TOOLS = {
   Writing: ["Text to Video","Text to Scene","Text to Animation","Text to Film","Script to Movie","Story to Video","Prompt to Video","Description to Scene","Narrative to Film","Dialogue to Animation","Plot to Video","Character to Scene","Action to Animation","Drama to Video","Comedy to Scene","Thriller to Film","Horror to Animation","Romance to Video","Sci-Fi to Scene","Fantasy to Film","Documentary Style","Commercial Creator","Trailer Maker","Music Video","Short Film Gen","Feature Film","Web Series","TV Episode","Podcast Video","Social Media","Vertical Video","Square Video","Widescreen","Ultra Wide","360 Video","VR Scene","AR Content","Hologram","Projection Map","LED Wall","Green Screen","Motion Graphics","Title Sequence","Credits Roll","Lower Thirds","Captions","Subtitles","Voiceover","Narration","Sound Design","Foley","Ambient Sound","Music Score","Theme Song","Jingle","Sound Effect","Transition Sound","Impact","Riser","Drop","Whoosh","Swoosh","Glitch","Digital","Analog","Vintage","Modern","Futuristic","Retro","Classic","Contemporary","Experimental","Abstract","Realistic","Stylized","Cartoon","Anime","3D Animation","2D Animation","Stop Motion","Claymation","Rotoscope","Motion Capture","CGI","VFX","Practical FX","Miniatures","Matte Painting","Compositing","Keying","Tracking","Stabilization","Color Grade","LUT Apply","Film Look","Digital Look","Broadcast","Cinema","IMAX","Anamorphic","Spherical","Wide Angle","Telephoto","Macro","Tilt Shift","Fisheye","Drone Shot","Aerial View","Birds Eye","Worms Eye","POV","First Person","Third Person","Isometric","Top Down","Side Scroller","Parallax","Ken Burns","Time Lapse","Hyperlapse"],
@@ -47,6 +48,7 @@ function AppContent() {
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [deploymentInfo, setDeploymentInfo] = useState(null);
 
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
@@ -54,6 +56,11 @@ function AppContent() {
   useEffect(() => {
     checkUser();
     loadCommunityPosts();
+    setDeploymentInfo(getDeploymentInfo());
+
+    if (isBoltEnvironment()) {
+      console.log('🚀 MandaStrong Studio is running on bolt.new');
+    }
   }, []);
 
   useEffect(() => {
@@ -552,6 +559,15 @@ function AppContent() {
           </button>
           {menuOpen && (
             <div className="absolute top-20 left-0 bg-zinc-950 border border-[#7c3aed] p-6 rounded-2xl w-72 shadow-2xl max-h-[80vh] overflow-y-auto scrollbar">
+              {deploymentInfo && deploymentInfo.isDeployed && (
+                <div className="mb-4 pb-4 border-b border-green-500/30">
+                  <div className="flex items-center gap-2 text-green-400 text-xs">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span className="font-bold">LIVE ON {deploymentInfo.platform.toUpperCase()}</span>
+                  </div>
+                  <p className="text-[10px] text-zinc-500 mt-1">{deploymentInfo.url}</p>
+                </div>
+              )}
               <div className="mb-4 pb-4 border-b border-[#7c3aed]">
                 {user ? (
                   <div>
@@ -630,6 +646,12 @@ function AppContent() {
         {/* PAGE 1 */}
         {page === 1 && (
           <div className="h-screen flex flex-col justify-center items-center text-center px-6">
+            {deploymentInfo && deploymentInfo.isDeployed && (
+              <div className="absolute top-8 right-8 bg-green-500/20 border border-green-500 rounded-full px-6 py-3 flex items-center gap-3">
+                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-green-400 font-bold text-sm">LIVE ON {deploymentInfo.platform.toUpperCase()}</span>
+              </div>
+            )}
             <Sparkles size={64} className="text-[#7c3aed] mb-8 animate-pulse"/>
             <h1 className="text-7xl md:text-9xl font-black text-[#7c3aed] uppercase mb-6">MANDASTRONG STUDIO</h1>
             <p className="text-xl md:text-2xl font-bold text-[#7c3aed] max-w-3xl mb-16">Welcome To The All In One Make Your Own Longer Movies App!</p>
