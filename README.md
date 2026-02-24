@@ -33,12 +33,4 @@ npm run build
 
 ## Database
 
-This project uses Supabase for data persistence. See `AUTH_SECURITY_CONFIGURATION.md` for required security settings.
-
-## Security
-
-Recent improvements:
-- ✅ Foreign key indexes added for optimal query performance
-- 📋 Auth configuration changes documented (manual setup required)
-
-See `AUTH_SECURITY_CONFIGURATION.md` for details.
+This project uses Supabase for data persistence.
