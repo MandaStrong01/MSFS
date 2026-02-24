@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
 import { Menu, Sparkles, MessageCircle, ChevronLeft, ChevronRight, CheckCircle, Play, Upload, Film, Mic, Zap, Shield, Music, Sliders, Database, FileVideo, TrendingUp, BookOpen, Clock, ThumbsUp, Heart, HelpCircle, Plus, Settings, Eye, Layers, X, Download, Save, Wand2, Trash2, Share2, Search } from 'lucide-react';
-import PWAInstallPrompt from './components/PWAInstallPrompt';
 
 const AI_TOOLS = {
   Writing: ["Text to Video","Text to Scene","Text to Animation","Text to Film","Script to Movie","Story to Video","Prompt to Video","Description to Scene","Narrative to Film","Dialogue to Animation","Plot to Video","Character to Scene","Action to Animation","Drama to Video","Comedy to Scene","Thriller to Film","Horror to Animation","Romance to Video","Sci-Fi to Scene","Fantasy to Film","Documentary Style","Commercial Creator","Trailer Maker","Music Video","Short Film Gen","Feature Film","Web Series","TV Episode","Podcast Video","Social Media","Vertical Video","Square Video","Widescreen","Ultra Wide","360 Video","VR Scene","AR Content","Hologram","Projection Map","LED Wall","Green Screen","Motion Graphics","Title Sequence","Credits Roll","Lower Thirds","Captions","Subtitles","Voiceover","Narration","Sound Design","Foley","Ambient Sound","Music Score","Theme Song","Jingle","Sound Effect","Transition Sound","Impact","Riser","Drop","Whoosh","Swoosh","Glitch","Digital","Analog","Vintage","Modern","Futuristic","Retro","Classic","Contemporary","Experimental","Abstract","Realistic","Stylized","Cartoon","Anime","3D Animation","2D Animation","Stop Motion","Claymation","Rotoscope","Motion Capture","CGI","VFX","Practical FX","Miniatures","Matte Painting","Compositing","Keying","Tracking","Stabilization","Color Grade","LUT Apply","Film Look","Digital Look","Broadcast","Cinema","IMAX","Anamorphic","Spherical","Wide Angle","Telephoto","Macro","Tilt Shift","Fisheye","Drone Shot","Aerial View","Birds Eye","Worms Eye","POV","First Person","Third Person","Isometric","Top Down","Side Scroller","Parallax","Ken Burns","Time Lapse","Hyperlapse"],
@@ -20,15 +19,11 @@ export default function App() {
   const [selectedTool, setSelectedTool] = useState(null);
   const [selectedEnhancement, setSelectedEnhancement] = useState(null);
   const [mediaLibrary, setMediaLibrary] = useState([]);
-  const [timeline, setTimeline] = useState({ video: [], audio: [], text: [], subtitles: [] });
-  const [uploading, setUploading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [timeline, setTimeline] = useState({ video: [], audio: [], text: [] });
   const [draggedItem, setDraggedItem] = useState(null);
   const [currentVideo, setCurrentVideo] = useState(null);
   const [aiPrompt, setAiPrompt] = useState('');
   const [generating, setGenerating] = useState(false);
-  const [showPasteOptions, setShowPasteOptions] = useState(false);
-  const [pasteMode, setPasteMode] = useState<'url' | 'text' | null>(null);
   const [rendering, setRendering] = useState(false);
   const [renderProgress, setRenderProgress] = useState(0);
   const [audioLevels, setAudioLevels] = useState({ music: 75, voice: 50, sfx: 65, master: 80 });
@@ -45,46 +40,31 @@ export default function App() {
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
 
-  // Show success message helper
-  const showSuccess = useCallback((message) => {
-    setSuccessMessage(message);
-    setTimeout(() => setSuccessMessage(''), 3000);
-  }, []);
-
   // REAL FILE UPLOAD
   const handleFileUpload = useCallback((e) => {
     const files = Array.from(e.target.files);
-    setUploading(true);
-
-    let filesProcessed = 0;
     files.forEach(file => {
       const reader = new FileReader();
       reader.onload = (event) => {
         const newAsset = {
           id: Date.now() + Math.random(),
           name: file.name,
-          type: file.type.startsWith('video') ? 'video' : file.type.startsWith('audio') ? 'audio' : file.type.includes('srt') || file.type.includes('text') ? 'subtitles' : 'image',
+          type: file.type.startsWith('video') ? 'video' : file.type.startsWith('audio') ? 'audio' : 'image',
           size: (file.size / 1024 / 1024).toFixed(2) + 'MB',
           url: event.target.result,
           timestamp: new Date().toISOString()
         };
         setMediaLibrary(prev => [...prev, newAsset]);
-
-        filesProcessed++;
-        if (filesProcessed === files.length) {
-          setUploading(false);
-          showSuccess('Task Complete! Transferred to Media Library Successfully');
-        }
       };
       reader.readAsDataURL(file);
     });
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, [showSuccess]);
+  }, []);
 
   // AI GENERATION
   const handleAIGenerate = useCallback(() => {
     if (!aiPrompt.trim()) return;
-
+    
     setGenerating(true);
     setTimeout(() => {
       const newAsset = {
@@ -101,9 +81,8 @@ export default function App() {
       setGenerating(false);
       setAiPrompt('');
       setSelectedTool(null);
-      showSuccess('Task Complete! Asset Generated & Transferred to Media Library Successfully');
     }, 2000);
-  }, [aiPrompt, selectedTool, showSuccess]);
+  }, [aiPrompt, selectedTool]);
 
   // DRAG & DROP TO TIMELINE
   const handleDrop = useCallback((track) => {
@@ -143,8 +122,7 @@ export default function App() {
     };
     setMediaLibrary(prev => [...prev, enhancedAsset]);
     setSelectedEnhancement(null);
-    showSuccess('Task Complete! Enhanced Asset Transferred to Media Library Successfully');
-  }, [selectedEnhancement, enhancementSettings, showSuccess]);
+  }, [selectedEnhancement, enhancementSettings]);
 
   // RENDER VIDEO
   const handleRender = useCallback(() => {
@@ -222,30 +200,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-black text-white relative">
-
-      <PWAInstallPrompt />
-
-      {/* Success Message Notification */}
-      {successMessage && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-[#7c3aed] text-white px-8 py-4 rounded-2xl shadow-2xl border-2 border-[#a78bfa] animate-bounce">
-          <div className="flex items-center gap-3">
-            <CheckCircle size={24} />
-            <span className="font-black text-lg">{successMessage}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Uploading Spinner */}
-      {uploading && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
-          <div className="bg-zinc-950 border-4 border-[#7c3aed] rounded-3xl p-12 text-center">
-            <div className="w-32 h-32 border-8 border-[#7c3aed] border-t-transparent rounded-full animate-spin mx-auto mb-6"/>
-            <h3 className="text-3xl font-black text-white mb-2">UPLOADING...</h3>
-            <p className="text-zinc-400">Transferring files to Media Library</p>
-          </div>
-        </div>
-      )}
-
+      
       <style>{`
         [data-bolt-badge], .bolt-badge, #bolt-badge, a[href*="bolt"],
         div[class*="fixed"][class*="bottom"] iframe, [class*="made"],
@@ -427,7 +382,27 @@ export default function App() {
                   <p className="font-black text-white text-sm">UPLOAD</p>
                 </button>
 
-                <button onClick={() => setShowPasteOptions(true)} className="aspect-square bg-zinc-900 border-2 border-[#7c3aed] rounded-2xl flex flex-col items-center justify-center hover:bg-[#7c3aed]/20 transition cursor-pointer">
+                <button onClick={async () => {
+                  try {
+                    const text = await navigator.clipboard.readText();
+                    if (text && text.trim()) {
+                      const isUrl = text.startsWith('http') || text.startsWith('data:');
+                      const newItem = {
+                        id: Date.now(),
+                        name: isUrl ? `pasted-${Date.now()}.mp4` : `text-${Date.now()}.txt`,
+                        type: isUrl ? 'video' : 'text',
+                        size: '0 MB',
+                        url: isUrl ? text : `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`,
+                        content: text,
+                        timestamp: new Date().toISOString()
+                      };
+                      setMediaLibrary(prev => [...prev, newItem]);
+                      setSelectedTool(null);
+                    }
+                  } catch (err) {
+                    console.error('Paste error:', err);
+                  }
+                }} className="aspect-square bg-zinc-900 border-2 border-[#7c3aed] rounded-2xl flex flex-col items-center justify-center hover:bg-[#7c3aed]/20 transition cursor-pointer">
                   <Layers size={40} className="text-[#7c3aed] mb-2"/>
                   <p className="font-black text-white text-sm">PASTE</p>
                 </button>
@@ -470,118 +445,6 @@ export default function App() {
                 </button>
                 <p className="text-xs text-center text-zinc-500">Assets automatically save to Media Library</p>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* PASTE OPTIONS MODAL */}
-        {showPasteOptions && (
-          <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8">
-            <div className="bg-zinc-950 border-2 border-[#7c3aed] rounded-3xl p-8 max-w-2xl w-full">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-black uppercase text-white">PASTE CONTENT</h2>
-                <button onClick={() => {setShowPasteOptions(false); setPasteMode(null);}} className="text-white hover:text-red-500 transition"><X size={32}/></button>
-              </div>
-
-              {!pasteMode ? (
-                <div className="space-y-4">
-                  <p className="text-zinc-400 mb-6">Choose what type of content you want to paste:</p>
-                  <button
-                    onClick={() => setPasteMode('url')}
-                    className="w-full bg-zinc-900 border-2 border-[#7c3aed] p-6 rounded-2xl hover:bg-[#7c3aed]/20 transition flex items-center gap-4"
-                  >
-                    <Layers size={48} className="text-[#7c3aed]"/>
-                    <div className="text-left">
-                      <h3 className="text-xl font-black text-white mb-2">PASTE URL</h3>
-                      <p className="text-sm text-zinc-400">Paste video URLs from YouTube, Vimeo, or direct links</p>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => setPasteMode('text')}
-                    className="w-full bg-zinc-900 border-2 border-[#7c3aed] p-6 rounded-2xl hover:bg-[#7c3aed]/20 transition flex items-center gap-4"
-                  >
-                    <Layers size={48} className="text-[#7c3aed]"/>
-                    <div className="text-left">
-                      <h3 className="text-xl font-black text-white mb-2">PASTE TEXT</h3>
-                      <p className="text-sm text-zinc-400">Paste scripts, notes, or any text content</p>
-                    </div>
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="bg-black border border-[#7c3aed]/30 rounded-xl p-6">
-                    <h3 className="font-bold mb-4 text-white flex items-center gap-2">
-                      <Layers size={20} className="text-[#7c3aed]"/>
-                      {pasteMode === 'url' ? 'Paste Video URL(s)' : 'Paste Text Content'}
-                    </h3>
-                    <textarea
-                      id="pasteInput"
-                      placeholder={pasteMode === 'url' ? 'Paste video URLs here (one per line)...' : 'Paste your text, script, or notes here...'}
-                      className="w-full bg-zinc-900 border border-[#7c3aed] p-3 rounded-lg text-white h-32 outline-none resize-none"
-                    />
-                  </div>
-                  <div className="flex gap-4">
-                    <button
-                      onClick={() => setPasteMode(null)}
-                      className="flex-1 bg-zinc-800 py-4 rounded-xl font-black uppercase hover:bg-zinc-700 transition"
-                    >
-                      BACK
-                    </button>
-                    <button
-                      onClick={async () => {
-                        const textarea = document.getElementById('pasteInput') as HTMLTextAreaElement;
-                        let text = textarea?.value || '';
-
-                        if (!text.trim()) {
-                          try {
-                            text = await navigator.clipboard.readText();
-                            if (textarea) textarea.value = text;
-                          } catch (err) {
-                            console.error('Clipboard access denied:', err);
-                          }
-                        }
-
-                        if (text && text.trim()) {
-                          if (pasteMode === 'url') {
-                            const urls = text.split('\n').filter(line =>
-                              line.trim().startsWith('http') || line.trim().includes('youtube.com') || line.trim().includes('vimeo.com')
-                            );
-                            urls.forEach((url, idx) => {
-                              const newItem = {
-                                id: Date.now() + idx,
-                                name: `video-url-${Date.now()}-${idx}.mp4`,
-                                type: 'video',
-                                size: 'Remote',
-                                url: url.trim(),
-                                content: url.trim(),
-                                timestamp: new Date().toISOString()
-                              };
-                              setMediaLibrary(prev => [...prev, newItem]);
-                            });
-                          } else {
-                            const newItem = {
-                              id: Date.now(),
-                              name: `text-${Date.now()}.txt`,
-                              type: 'text',
-                              size: `${(text.length / 1024).toFixed(2)} KB`,
-                              url: `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`,
-                              content: text,
-                              timestamp: new Date().toISOString()
-                            };
-                            setMediaLibrary(prev => [...prev, newItem]);
-                          }
-                          setShowPasteOptions(false);
-                          setPasteMode(null);
-                          setSelectedTool(null);
-                        }
-                      }}
-                      className="flex-1 bg-[#7c3aed] py-4 rounded-xl font-black uppercase hover:bg-[#6d28d9] transition"
-                    >
-                      IMPORT TO LIBRARY
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -753,10 +616,9 @@ export default function App() {
                 <h3 className="text-2xl font-black uppercase text-[#7c3aed] mb-6">MULTI-TRACK TIMELINE</h3>
                 <div className="space-y-3">
                   {[
-                    { key: 'video', label: 'VIDEO CLIPS', icon: FileVideo },
-                    { key: 'audio', label: 'AUDIO / MUSIC', icon: Music },
-                    { key: 'subtitles', label: 'SUBTITLES (SRT)', icon: MessageCircle },
-                    { key: 'text', label: 'TEXT & GRAPHICS', icon: Layers }
+                    { key: 'video', label: 'VIDEO TRACK', icon: FileVideo },
+                    { key: 'audio', label: 'AUDIO TRACK', icon: Music },
+                    { key: 'text', label: 'TEXT OVERLAY', icon: Layers }
                   ].map(track => (
                     <div 
                       key={track.key}
@@ -1305,21 +1167,8 @@ export default function App() {
             <div className="max-w-6xl mx-auto">
               
               <div className="mb-16">
-                <video
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full rounded-3xl border-4 border-[#7c3aed] shadow-2xl"
-                  onError={(e) => {
-                    const video = e.currentTarget;
-                    if (video.src.includes('ThatsAllFolks')) {
-                      video.src = '/background.mp4';
-                    }
-                  }}
-                >
-                  <source src="/ThatsAllFolks.mp4" type="video/mp4"/>
-                  <source src="/background.mp4" type="video/mp4"/>
+                <video autoPlay loop muted playsInline className="w-full rounded-3xl border-4 border-[#7c3aed] shadow-2xl">
+                  <source src="/ThatsAllFolks.MP4" type="video/mp4"/>
                 </video>
               </div>
 
@@ -1373,3 +1222,4 @@ export default function App() {
     </div>
   );
 }
+v
