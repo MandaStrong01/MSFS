@@ -20,7 +20,9 @@ export default function App() {
   const [selectedTool, setSelectedTool] = useState(null);
   const [selectedEnhancement, setSelectedEnhancement] = useState(null);
   const [mediaLibrary, setMediaLibrary] = useState([]);
-  const [timeline, setTimeline] = useState({ video: [], audio: [], text: [] });
+  const [timeline, setTimeline] = useState({ video: [], audio: [], text: [], subtitles: [] });
+  const [uploading, setUploading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [draggedItem, setDraggedItem] = useState(null);
   const [currentVideo, setCurrentVideo] = useState(null);
   const [aiPrompt, setAiPrompt] = useState('');
@@ -43,31 +45,46 @@ export default function App() {
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
 
+  // Show success message helper
+  const showSuccess = useCallback((message) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(''), 3000);
+  }, []);
+
   // REAL FILE UPLOAD
   const handleFileUpload = useCallback((e) => {
     const files = Array.from(e.target.files);
+    setUploading(true);
+
+    let filesProcessed = 0;
     files.forEach(file => {
       const reader = new FileReader();
       reader.onload = (event) => {
         const newAsset = {
           id: Date.now() + Math.random(),
           name: file.name,
-          type: file.type.startsWith('video') ? 'video' : file.type.startsWith('audio') ? 'audio' : 'image',
+          type: file.type.startsWith('video') ? 'video' : file.type.startsWith('audio') ? 'audio' : file.type.includes('srt') || file.type.includes('text') ? 'subtitles' : 'image',
           size: (file.size / 1024 / 1024).toFixed(2) + 'MB',
           url: event.target.result,
           timestamp: new Date().toISOString()
         };
         setMediaLibrary(prev => [...prev, newAsset]);
+
+        filesProcessed++;
+        if (filesProcessed === files.length) {
+          setUploading(false);
+          showSuccess('Task Complete! Transferred to Media Library Successfully');
+        }
       };
       reader.readAsDataURL(file);
     });
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, []);
+  }, [showSuccess]);
 
   // AI GENERATION
   const handleAIGenerate = useCallback(() => {
     if (!aiPrompt.trim()) return;
-    
+
     setGenerating(true);
     setTimeout(() => {
       const newAsset = {
@@ -84,8 +101,9 @@ export default function App() {
       setGenerating(false);
       setAiPrompt('');
       setSelectedTool(null);
+      showSuccess('Task Complete! Asset Generated & Transferred to Media Library Successfully');
     }, 2000);
-  }, [aiPrompt, selectedTool]);
+  }, [aiPrompt, selectedTool, showSuccess]);
 
   // DRAG & DROP TO TIMELINE
   const handleDrop = useCallback((track) => {
@@ -125,7 +143,8 @@ export default function App() {
     };
     setMediaLibrary(prev => [...prev, enhancedAsset]);
     setSelectedEnhancement(null);
-  }, [selectedEnhancement, enhancementSettings]);
+    showSuccess('Task Complete! Enhanced Asset Transferred to Media Library Successfully');
+  }, [selectedEnhancement, enhancementSettings, showSuccess]);
 
   // RENDER VIDEO
   const handleRender = useCallback(() => {
@@ -205,6 +224,27 @@ export default function App() {
     <div className="min-h-screen bg-black text-white relative">
 
       <PWAInstallPrompt />
+
+      {/* Success Message Notification */}
+      {successMessage && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-[#7c3aed] text-white px-8 py-4 rounded-2xl shadow-2xl border-2 border-[#a78bfa] animate-bounce">
+          <div className="flex items-center gap-3">
+            <CheckCircle size={24} />
+            <span className="font-black text-lg">{successMessage}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Uploading Spinner */}
+      {uploading && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
+          <div className="bg-zinc-950 border-4 border-[#7c3aed] rounded-3xl p-12 text-center">
+            <div className="w-32 h-32 border-8 border-[#7c3aed] border-t-transparent rounded-full animate-spin mx-auto mb-6"/>
+            <h3 className="text-3xl font-black text-white mb-2">UPLOADING...</h3>
+            <p className="text-zinc-400">Transferring files to Media Library</p>
+          </div>
+        </div>
+      )}
 
       <style>{`
         [data-bolt-badge], .bolt-badge, #bolt-badge, a[href*="bolt"],
@@ -713,9 +753,10 @@ export default function App() {
                 <h3 className="text-2xl font-black uppercase text-[#7c3aed] mb-6">MULTI-TRACK TIMELINE</h3>
                 <div className="space-y-3">
                   {[
-                    { key: 'video', label: 'VIDEO TRACK', icon: FileVideo },
-                    { key: 'audio', label: 'AUDIO TRACK', icon: Music },
-                    { key: 'text', label: 'TEXT OVERLAY', icon: Layers }
+                    { key: 'video', label: 'VIDEO CLIPS', icon: FileVideo },
+                    { key: 'audio', label: 'AUDIO / MUSIC', icon: Music },
+                    { key: 'subtitles', label: 'SUBTITLES (SRT)', icon: MessageCircle },
+                    { key: 'text', label: 'TEXT & GRAPHICS', icon: Layers }
                   ].map(track => (
                     <div 
                       key={track.key}

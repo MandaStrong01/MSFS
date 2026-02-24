@@ -22,8 +22,12 @@ export const ThankYouMissionPage: React.FC<ThankYouMissionPageProps> = ({ onBack
         </div>
 
         <h1 className="text-6xl font-black text-center mb-4 text-purple-400">
-          THAT'S ALL FOLKS!
+          Amanda's Thank You Message
         </h1>
+
+        <h2 className="text-5xl font-black text-center mb-8 text-purple-300">
+          THAT'S ALL FOLKS!
+        </h2>
 
         <div className="bg-gradient-to-br from-purple-900 to-purple-800 border-2 border-purple-600 rounded-2xl p-8 mb-8">
           <h2 className="text-3xl font-black text-center mb-6">A Special Thank You</h2>
@@ -55,7 +59,7 @@ export const ThankYouMissionPage: React.FC<ThankYouMissionPageProps> = ({ onBack
         <div className="bg-gray-900 border-2 border-purple-600 rounded-2xl p-6 mb-8 hover:border-purple-400 transition cursor-pointer">
           <div className="flex items-center justify-center gap-3 mb-2">
             <BookOpen className="text-purple-400" size={32} />
-            <h3 className="text-2xl font-black text-purple-400">Full User Guide To MandaStrong Studio</h3>
+            <h3 className="text-2xl font-black text-purple-400">How To Use Download Guide</h3>
           </div>
           <p className="text-center text-gray-400">Click to access the complete guide</p>
         </div>
@@ -89,6 +93,9 @@ export const ThankYouMissionPage: React.FC<ThankYouMissionPageProps> = ({ onBack
                 <Heart className="text-red-500" size={24} />
                 Supporting Our Heroes
               </h3>
+              <p className="text-sm leading-relaxed mb-3">
+                My goal is to support <span className="font-bold">Veterans Mental Health Services</span>, providing films and books to schools to help with social skills and innovating/educating fellow humans about my Humanity First Campaign.
+              </p>
               <p className="text-sm leading-relaxed mb-3">
                 <span className="font-bold">All Etsy Store Proceeds Benefit Veterans Mental Health Services</span> ~ 100% of all
                 proceeds from our Etsy Store fundraiser are donated directly to <span className="font-bold">Veterans Mental
@@ -138,9 +145,15 @@ export const ThankYouMissionPage: React.FC<ThankYouMissionPageProps> = ({ onBack
         <div className="flex justify-center gap-4 mt-12 mb-20">
           <button
             onClick={onBackToHome}
-            className="bg-black border-2 border-purple-600 text-white px-12 py-4 rounded-xl font-black text-xl hover:bg-purple-600 transition"
+            className="bg-purple-600 hover:bg-purple-700 border-2 border-purple-500 text-white px-12 py-4 rounded-xl font-black text-xl transition"
           >
-            Back
+            Home
+          </button>
+          <button
+            onClick={() => window.close()}
+            className="bg-purple-600 hover:bg-purple-700 border-2 border-purple-500 text-white px-12 py-4 rounded-xl font-black text-xl transition"
+          >
+            Exit
           </button>
         </div>
       </div>

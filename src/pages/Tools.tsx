@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Search, Video, Image, Music, FileText, Code, Database, Brush, Brain, Wand2 } from 'lucide-react';
+import { Search, Video, Image, Music, FileText, Code, Database, Brush, Brain, Wand2, Film } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const categories = [
   { name: 'All', icon: Wand2 },
@@ -51,12 +52,46 @@ export default function Tools() {
       padding: '48px 24px',
     }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+        <Link
+          to="/upload"
+          style={{
+            textDecoration: 'none',
+            display: 'block',
+            marginBottom: '32px',
+            background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
+            padding: '24px',
+            borderRadius: '16px',
+            textAlign: 'center',
+            transition: 'all 0.3s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 12px 32px rgba(124, 58, 237, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+            <Film size={32} style={{ color: 'white' }} />
+            <div style={{ textAlign: 'left' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                Browse First Option
+              </h2>
+              <p style={{ fontSize: '16px', color: 'rgba(255, 255, 255, 0.9)' }}>
+                Jump straight to video editor and start creating
+              </p>
+            </div>
+          </div>
+        </Link>
+
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
           <h1 style={{
             fontSize: '48px',
             fontWeight: 'bold',
             marginBottom: '16px',
-            background: 'linear-gradient(135deg, #00d4ff 0%, #0099cc 100%)',
+            background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -104,7 +139,7 @@ export default function Tools() {
               transition: 'all 0.3s',
             }}
             onFocus={(e) => {
-              e.target.style.borderColor = '#00d4ff';
+              e.target.style.borderColor = '#7c3aed';
               e.target.style.background = 'rgba(255, 255, 255, 0.08)';
             }}
             onBlur={(e) => {
@@ -129,8 +164,8 @@ export default function Tools() {
                 key={category.name}
                 onClick={() => setSelectedCategory(category.name)}
                 style={{
-                  background: isSelected ? '#00d4ff' : 'rgba(255, 255, 255, 0.05)',
-                  border: `1px solid ${isSelected ? '#00d4ff' : 'rgba(255, 255, 255, 0.1)'}`,
+                  background: isSelected ? '#7c3aed' : 'rgba(255, 255, 255, 0.05)',
+                  border: `1px solid ${isSelected ? '#7c3aed' : 'rgba(255, 255, 255, 0.1)'}`,
                   color: 'white',
                   padding: '12px 24px',
                   borderRadius: '12px',
