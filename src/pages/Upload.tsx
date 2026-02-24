@@ -1,10 +1,15 @@
 import { useState, useRef, useCallback } from 'react';
-import { Upload as UploadIcon, X, Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, RotateCcw, Download } from 'lucide-react';
+import { Upload as UploadIcon, X, Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, RotateCcw, Download, Trash2 } from 'lucide-react';
+
+interface FileWithPreview {
+  file: File;
+  preview: string;
+  type: 'image' | 'video' | 'audio';
+}
 
 export default function Upload() {
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [fileType, setFileType] = useState<'image' | 'video' | 'audio' | null>(null);
+  const [files, setFiles] = useState<FileWithPreview[]>([]);
+  const [currentIndex, setCurrentIndex] = useState<number | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -17,26 +22,33 @@ export default function Upload() {
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = useCallback((selectedFile: File) => {
-    setFile(selectedFile);
+  const handleFilesChange = useCallback((selectedFiles: File[]) => {
+    const newFiles: FileWithPreview[] = [];
 
-    const type = selectedFile.type.split('/')[0];
-    if (type === 'image' || type === 'video' || type === 'audio') {
-      setFileType(type as 'image' | 'video' | 'audio');
-      const url = URL.createObjectURL(selectedFile);
-      setPreview(url);
-    }
+    selectedFiles.forEach(selectedFile => {
+      const type = selectedFile.type.split('/')[0];
+      if (type === 'image' || type === 'video' || type === 'audio') {
+        const url = URL.createObjectURL(selectedFile);
+        newFiles.push({
+          file: selectedFile,
+          preview: url,
+          type: type as 'image' | 'video' | 'audio'
+        });
+      }
+    });
+
+    setFiles(prev => [...prev, ...newFiles]);
   }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
 
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile) {
-      handleFileChange(droppedFile);
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    if (droppedFiles.length > 0) {
+      handleFilesChange(droppedFiles);
     }
-  }, [handleFileChange]);
+  }, [handleFilesChange]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -119,19 +131,41 @@ export default function Upload() {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const clearFile = () => {
-    setFile(null);
-    setPreview(null);
-    setFileType(null);
-    setIsPlaying(false);
-    setCurrentTime(0);
-    setDuration(0);
-    if (preview) {
-      URL.revokeObjectURL(preview);
+  const removeFile = (index: number) => {
+    const fileToRemove = files[index];
+    if (fileToRemove) {
+      URL.revokeObjectURL(fileToRemove.preview);
+    }
+
+    setFiles(prev => prev.filter((_, i) => i !== index));
+
+    if (currentIndex === index) {
+      setCurrentIndex(null);
+      setIsPlaying(false);
+      setCurrentTime(0);
+      setDuration(0);
+    } else if (currentIndex !== null && currentIndex > index) {
+      setCurrentIndex(currentIndex - 1);
     }
   };
 
-  if (file && preview && (fileType === 'video' || fileType === 'image' || fileType === 'audio')) {
+  const openPreview = (index: number) => {
+    setCurrentIndex(index);
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+  };
+
+  const closePreview = () => {
+    setCurrentIndex(null);
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+  };
+
+  const currentFile = currentIndex !== null ? files[currentIndex] : null;
+
+  if (currentFile) {
     return (
       <div
         ref={containerRef}
@@ -156,7 +190,7 @@ export default function Upload() {
           gap: '12px',
         }}>
           <button
-            onClick={clearFile}
+            onClick={closePreview}
             style={{
               background: 'rgba(0, 0, 0, 0.7)',
               backdropFilter: 'blur(10px)',
@@ -189,9 +223,9 @@ export default function Upload() {
           justifyContent: 'center',
           padding: '80px 24px',
         }}>
-          {fileType === 'image' && (
+          {currentFile.type === 'image' && (
             <img
-              src={preview}
+              src={currentFile.preview}
               alt="Preview"
               style={{
                 maxWidth: '100%',
@@ -201,10 +235,10 @@ export default function Upload() {
             />
           )}
 
-          {fileType === 'video' && (
+          {currentFile.type === 'video' && (
             <video
               ref={videoRef}
-              src={preview}
+              src={currentFile.preview}
               onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={handleLoadedMetadata}
               style={{
@@ -215,7 +249,7 @@ export default function Upload() {
             />
           )}
 
-          {fileType === 'audio' && (
+          {currentFile.type === 'audio' && (
             <div style={{
               width: '100%',
               maxWidth: '600px',
@@ -226,7 +260,7 @@ export default function Upload() {
             }}>
               <audio
                 ref={audioRef}
-                src={preview}
+                src={currentFile.preview}
                 onTimeUpdate={handleTimeUpdate}
                 onLoadedMetadata={handleLoadedMetadata}
               />
@@ -235,16 +269,16 @@ export default function Upload() {
                 marginBottom: '32px',
               }}>
                 <Volume2 size={64} style={{ color: '#00d4ff', marginBottom: '16px' }} />
-                <h3 style={{ fontSize: '24px', marginBottom: '8px' }}>{file.name}</h3>
+                <h3 style={{ fontSize: '24px', marginBottom: '8px' }}>{currentFile.file.name}</h3>
                 <p style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                  {(currentFile.file.size / 1024 / 1024).toFixed(2)} MB
                 </p>
               </div>
             </div>
           )}
         </div>
 
-        {(fileType === 'video' || fileType === 'audio') && (
+        {(currentFile.type === 'video' || currentFile.type === 'audio') && (
           <div style={{
             background: 'rgba(0, 0, 0, 0.9)',
             backdropFilter: 'blur(20px)',
@@ -373,7 +407,7 @@ export default function Upload() {
                   alignItems: 'center',
                   gap: '12px',
                 }}>
-                  {fileType === 'video' && (
+                  {currentFile.type === 'video' && (
                     <button
                       onClick={toggleFullscreen}
                       style={{
@@ -482,10 +516,11 @@ export default function Upload() {
           <input
             ref={fileInputRef}
             type="file"
+            multiple
             onChange={(e) => {
-              const selectedFile = e.target.files?.[0];
-              if (selectedFile) {
-                handleFileChange(selectedFile);
+              const selectedFiles = Array.from(e.target.files || []);
+              if (selectedFiles.length > 0) {
+                handleFilesChange(selectedFiles);
               }
             }}
             accept="image/*,video/*,audio/*"
@@ -556,6 +591,138 @@ export default function Upload() {
             </div>
           </div>
         </div>
+
+        {files.length > 0 && (
+          <div style={{ marginTop: '48px' }}>
+            <h2 style={{
+              fontSize: '32px',
+              fontWeight: 'bold',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              Uploaded Files ({files.length})
+            </h2>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+              gap: '24px',
+            }}>
+              {files.map((fileItem, index) => (
+                <div
+                  key={index}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s',
+                    position: 'relative',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 212, 255, 0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <div
+                    onClick={() => openPreview(index)}
+                    style={{
+                      aspectRatio: '1',
+                      background: 'rgba(0, 0, 0, 0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {fileItem.type === 'image' && (
+                      <img
+                        src={fileItem.preview}
+                        alt={fileItem.file.name}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    )}
+                    {fileItem.type === 'video' && (
+                      <video
+                        src={fileItem.preview}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    )}
+                    {fileItem.type === 'audio' && (
+                      <Volume2 size={48} style={{ color: '#00d4ff' }} />
+                    )}
+                  </div>
+
+                  <div style={{ padding: '16px' }}>
+                    <h3 style={{
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      marginBottom: '8px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {fileItem.file.name}
+                    </h3>
+                    <p style={{
+                      fontSize: '12px',
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      marginBottom: '12px',
+                    }}>
+                      {(fileItem.file.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeFile(index);
+                      }}
+                      style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        color: '#ef4444',
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        transition: 'all 0.3s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                      }}
+                    >
+                      <Trash2 size={14} />
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
