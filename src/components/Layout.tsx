@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Sparkles, Upload, Star } from 'lucide-react';
+import UploadQueueStatus from './UploadQueueStatus';
 
 export default function Layout() {
   const location = useLocation();
@@ -120,6 +121,8 @@ export default function Layout() {
       <main style={{ flex: 1 }}>
         <Outlet />
       </main>
+
+      <UploadQueueStatus />
 
       <footer style={{
         background: 'rgba(0, 0, 0, 0.6)',

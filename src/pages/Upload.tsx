@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
-import { Upload as UploadIcon, X, Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, RotateCcw, Download, Trash2 } from 'lucide-react';
+import { Upload as UploadIcon, X, Trash2, Film, Image as ImageIcon, Music } from 'lucide-react';
+import { uploadQueue } from '../lib/uploadQueue';
+import VideoPlayer from '../components/VideoPlayer';
 
 interface FileWithPreview {
   file: File;
@@ -10,16 +12,9 @@ interface FileWithPreview {
 export default function Upload() {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [uploadMetadata, setUploadMetadata] = useState<{ [key: string]: { title: string; description: string; isPublic: boolean } }>({});
 
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFilesChange = useCallback((selectedFiles: File[]) => {
@@ -59,76 +54,23 @@ export default function Upload() {
     setIsDragging(false);
   }, []);
 
-  const togglePlay = () => {
-    const media = videoRef.current || audioRef.current;
-    if (media) {
-      if (isPlaying) {
-        media.pause();
-      } else {
-        media.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
+  const handleUpload = (file: File) => {
+    const fileId = `${file.name}-${Date.now()}`;
+    const metadata = uploadMetadata[fileId] || {
+      title: file.name.replace(/\.[^/.]+$/, ''),
+      description: '',
+      isPublic: true,
+    };
+
+    uploadQueue.addTask(file, metadata);
   };
 
-  const toggleMute = () => {
-    const media = videoRef.current || audioRef.current;
-    if (media) {
-      media.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
-
-  const handleTimeUpdate = () => {
-    const media = videoRef.current || audioRef.current;
-    if (media) {
-      setCurrentTime(media.currentTime);
-    }
-  };
-
-  const handleLoadedMetadata = () => {
-    const media = videoRef.current || audioRef.current;
-    if (media) {
-      setDuration(media.duration);
-    }
-  };
-
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    const media = videoRef.current || audioRef.current;
-    const progressBar = e.currentTarget;
-    const rect = progressBar.getBoundingClientRect();
-    const percent = (e.clientX - rect.left) / rect.width;
-
-    if (media) {
-      media.currentTime = percent * duration;
-    }
-  };
-
-  const toggleFullscreen = () => {
-    if (!isFullscreen && containerRef.current) {
-      if (containerRef.current.requestFullscreen) {
-        containerRef.current.requestFullscreen();
-      }
-      setIsFullscreen(true);
-    } else if (document.fullscreenElement) {
-      document.exitFullscreen();
-      setIsFullscreen(false);
-    }
-  };
-
-  const handleReset = () => {
-    const media = videoRef.current || audioRef.current;
-    if (media) {
-      media.currentTime = 0;
-      media.pause();
-      setIsPlaying(false);
-    }
-  };
-
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  const handleUploadAll = () => {
+    files.forEach((fileItem) => {
+      handleUpload(fileItem.file);
+    });
+    setFiles([]);
+    setUploadMetadata({});
   };
 
   const removeFile = (index: number) => {
@@ -141,9 +83,6 @@ export default function Upload() {
 
     if (currentIndex === index) {
       setCurrentIndex(null);
-      setIsPlaying(false);
-      setCurrentTime(0);
-      setDuration(0);
     } else if (currentIndex !== null && currentIndex > index) {
       setCurrentIndex(currentIndex - 1);
     }
@@ -151,319 +90,59 @@ export default function Upload() {
 
   const openPreview = (index: number) => {
     setCurrentIndex(index);
-    setIsPlaying(false);
-    setCurrentTime(0);
-    setDuration(0);
   };
 
   const closePreview = () => {
     setCurrentIndex(null);
-    setIsPlaying(false);
-    setCurrentTime(0);
-    setDuration(0);
   };
 
   const currentFile = currentIndex !== null ? files[currentIndex] : null;
 
   if (currentFile) {
     return (
-      <div
-        ref={containerRef}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: '#000',
-          display: 'flex',
-          flexDirection: 'column',
-          zIndex: 2000,
-        }}
-      >
-        <div style={{
-          position: 'absolute',
-          top: '24px',
-          right: '24px',
-          zIndex: 10,
-          display: 'flex',
-          gap: '12px',
-        }}>
+      <div className="fixed inset-0 bg-black z-50 flex flex-col">
+        <div className="absolute top-6 right-6 z-10">
           <button
             onClick={closePreview}
-            style={{
-              background: 'rgba(0, 0, 0, 0.7)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              color: 'white',
-              width: '48px',
-              height: '48px',
-              borderRadius: '50%',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.3s',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 0, 0, 0.8)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(0, 0, 0, 0.7)';
-            }}
+            className="w-12 h-12 bg-black/70 backdrop-blur-lg border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-red-500/80 transition-all"
           >
             <X size={24} />
           </button>
         </div>
 
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '80px 24px',
-        }}>
+        <div className="flex-1 flex items-center justify-center p-20">
           {currentFile.type === 'image' && (
             <img
               src={currentFile.preview}
               alt="Preview"
-              style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
-                objectFit: 'contain',
-              }}
+              className="max-w-full max-h-full object-contain"
             />
           )}
 
           {currentFile.type === 'video' && (
-            <video
-              ref={videoRef}
+            <VideoPlayer
               src={currentFile.preview}
-              onTimeUpdate={handleTimeUpdate}
-              onLoadedMetadata={handleLoadedMetadata}
-              style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
-                objectFit: 'contain',
-              }}
+              className="w-full h-full"
             />
           )}
 
           {currentFile.type === 'audio' && (
-            <div style={{
-              width: '100%',
-              maxWidth: '600px',
-              padding: '48px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: '24px',
-              backdropFilter: 'blur(20px)',
-            }}>
-              <audio
-                ref={audioRef}
-                src={currentFile.preview}
-                onTimeUpdate={handleTimeUpdate}
-                onLoadedMetadata={handleLoadedMetadata}
-              />
-              <div style={{
-                textAlign: 'center',
-                marginBottom: '32px',
-              }}>
-                <Volume2 size={64} style={{ color: '#00d4ff', marginBottom: '16px' }} />
-                <h3 style={{ fontSize: '24px', marginBottom: '8px' }}>{currentFile.file.name}</h3>
-                <p style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+            <div className="w-full max-w-2xl p-12 bg-white/5 rounded-3xl backdrop-blur-lg">
+              <div className="text-center mb-8">
+                <Music size={64} className="text-cyan-400 mx-auto mb-4" />
+                <h3 className="text-2xl font-bold mb-2">{currentFile.file.name}</h3>
+                <p className="text-white/60">
                   {(currentFile.file.size / 1024 / 1024).toFixed(2)} MB
                 </p>
               </div>
+              <audio
+                src={currentFile.preview}
+                controls
+                className="w-full"
+              />
             </div>
           )}
         </div>
-
-        {(currentFile.type === 'video' || currentFile.type === 'audio') && (
-          <div style={{
-            background: 'rgba(0, 0, 0, 0.9)',
-            backdropFilter: 'blur(20px)',
-            padding: '24px',
-            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-          }}>
-            <div style={{
-              maxWidth: '1200px',
-              margin: '0 auto',
-            }}>
-              <div
-                onClick={handleSeek}
-                style={{
-                  width: '100%',
-                  height: '6px',
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  borderRadius: '3px',
-                  cursor: 'pointer',
-                  marginBottom: '16px',
-                  position: 'relative',
-                }}
-              >
-                <div style={{
-                  width: `${(currentTime / duration) * 100}%`,
-                  height: '100%',
-                  background: '#00d4ff',
-                  borderRadius: '3px',
-                  transition: 'width 0.1s',
-                }} />
-              </div>
-
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '16px',
-                }}>
-                  <button
-                    onClick={togglePlay}
-                    style={{
-                      background: '#00d4ff',
-                      border: 'none',
-                      color: 'white',
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '50%',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'all 0.3s',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'scale(1.1)';
-                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 212, 255, 0.5)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'scale(1)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                  >
-                    {isPlaying ? <Pause size={24} /> : <Play size={24} />}
-                  </button>
-
-                  <button
-                    onClick={handleReset}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      color: 'white',
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'all 0.3s',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    }}
-                  >
-                    <RotateCcw size={20} />
-                  </button>
-
-                  <button
-                    onClick={toggleMute}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      color: 'white',
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'all 0.3s',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    }}
-                  >
-                    {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-                  </button>
-
-                  <span style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px', minWidth: '100px' }}>
-                    {formatTime(currentTime)} / {formatTime(duration)}
-                  </span>
-                </div>
-
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                }}>
-                  {currentFile.type === 'video' && (
-                    <button
-                      onClick={toggleFullscreen}
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        color: 'white',
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '50%',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 0.3s',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                      }}
-                    >
-                      {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-                    </button>
-                  )}
-
-                  <button
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      color: 'white',
-                      padding: '10px 20px',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      transition: 'all 0.3s',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    }}
-                  >
-                    <Download size={16} />
-                    Download
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -594,129 +273,81 @@ export default function Upload() {
 
         {files.length > 0 && (
           <div style={{ marginTop: '48px' }}>
-            <h2 style={{
-              fontSize: '32px',
-              fontWeight: 'bold',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              Uploaded Files ({files.length})
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold">
+                Ready to Upload ({files.length})
+              </h2>
+              <button
+                onClick={handleUploadAll}
+                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-cyan-500/50 transition-all flex items-center gap-2"
+              >
+                <UploadIcon size={20} />
+                Upload All Files
+              </button>
+            </div>
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-              gap: '24px',
-            }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {files.map((fileItem, index) => (
                 <div
                   key={index}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s',
-                    position: 'relative',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 212, 255, 0.2)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
+                  className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl overflow-hidden hover:transform hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/20 transition-all"
                 >
                   <div
                     onClick={() => openPreview(index)}
-                    style={{
-                      aspectRatio: '1',
-                      background: 'rgba(0, 0, 0, 0.3)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      overflow: 'hidden',
-                    }}
+                    className="aspect-square bg-black/30 flex items-center justify-center overflow-hidden cursor-pointer relative group"
                   >
                     {fileItem.type === 'image' && (
                       <img
                         src={fileItem.preview}
                         alt={fileItem.file.name}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                        }}
+                        className="w-full h-full object-cover"
                       />
                     )}
                     {fileItem.type === 'video' && (
-                      <video
-                        src={fileItem.preview}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                        }}
-                      />
+                      <>
+                        <video
+                          src={fileItem.preview}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Film size={48} className="text-white" />
+                        </div>
+                      </>
                     )}
                     {fileItem.type === 'audio' && (
-                      <Volume2 size={48} style={{ color: '#00d4ff' }} />
+                      <Music size={48} className="text-cyan-400" />
                     )}
                   </div>
 
-                  <div style={{ padding: '16px' }}>
-                    <h3 style={{
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      marginBottom: '8px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}>
+                  <div className="p-4">
+                    <h3 className="text-sm font-semibold mb-2 truncate">
                       {fileItem.file.name}
                     </h3>
-                    <p style={{
-                      fontSize: '12px',
-                      color: 'rgba(255, 255, 255, 0.6)',
-                      marginBottom: '12px',
-                    }}>
+                    <p className="text-xs text-white/60 mb-3">
                       {(fileItem.file.size / 1024 / 1024).toFixed(2)} MB
                     </p>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeFile(index);
-                      }}
-                      style={{
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                        color: '#ef4444',
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        transition: 'all 0.3s',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                      }}
-                    >
-                      <Trash2 size={14} />
-                      Remove
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUpload(fileItem.file);
+                          removeFile(index);
+                        }}
+                        className="flex-1 px-4 py-2 bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded-lg text-xs font-semibold hover:bg-cyan-500/30 transition-all"
+                      >
+                        Upload
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFile(index);
+                        }}
+                        className="px-4 py-2 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg hover:bg-red-500/30 transition-all"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
