@@ -127,6 +127,33 @@ export default function Layout() {
         padding: '32px 24px',
         textAlign: 'center',
       }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '24px',
+          marginBottom: '16px',
+        }}>
+          <Link to="/terms" style={{
+            color: 'rgba(255, 255, 255, 0.6)',
+            fontSize: '14px',
+            textDecoration: 'none',
+            transition: 'color 0.3s',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.color = '#00d4ff'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}>
+            Terms of Service
+          </Link>
+          <Link to="/disclaimer" style={{
+            color: 'rgba(255, 255, 255, 0.6)',
+            fontSize: '14px',
+            textDecoration: 'none',
+            transition: 'color 0.3s',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.color = '#00d4ff'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}>
+            Disclaimer
+          </Link>
+        </div>
         <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '14px' }}>
           © 2024 MandaStrong Studios. All rights reserved.
         </p>
