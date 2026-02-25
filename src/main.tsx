@@ -7,6 +7,7 @@ import EditorsChoice from './pages/EditorsChoice';
 import Pricing from './pages/Pricing';
 import About from './pages/About';
 import Upload from './pages/Upload';
+import Projects from './pages/Projects';
 import TermsOfService from './pages/TermsOfService';
 import Disclaimer from './pages/Disclaimer';
 import './index.css';
@@ -54,6 +55,7 @@ root.render(
         <Route path="pricing" element={<Pricing />} />
         <Route path="about" element={<About />} />
         <Route path="upload" element={<Upload />} />
+        <Route path="projects" element={<Projects />} />
         <Route path="terms" element={<TermsOfService />} />
         <Route path="disclaimer" element={<Disclaimer />} />
       </Route>

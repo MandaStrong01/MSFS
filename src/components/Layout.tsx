@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Sparkles, Upload, Star } from 'lucide-react';
+import { Sparkles, Upload, Star, FolderOpen } from 'lucide-react';
 import UploadQueueStatus from './UploadQueueStatus';
 
 export default function Layout() {
@@ -58,6 +58,19 @@ export default function Layout() {
               transition: 'color 0.3s',
             }}>
               Tools
+            </Link>
+            <Link to="/projects" style={{
+              textDecoration: 'none',
+              color: isActive('/projects') ? '#00d4ff' : 'white',
+              fontSize: '16px',
+              fontWeight: isActive('/projects') ? '600' : '400',
+              transition: 'color 0.3s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}>
+              <FolderOpen size={16} />
+              Projects
             </Link>
             <Link to="/editors-choice" style={{
               textDecoration: 'none',

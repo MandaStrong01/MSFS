@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Eye } from 'lucide-react';
+import { ArrowLeft, Eye, FolderOpen } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+import { useNavigate } from 'react-router-dom';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -17,6 +18,7 @@ export const EnhancedLoginRegister: React.FC<EnhancedLoginRegisterProps> = ({
   onLoginSuccess,
   onBrowseAsGuest
 }) => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -33,6 +35,15 @@ export const EnhancedLoginRegister: React.FC<EnhancedLoginRegisterProps> = ({
       alert(error.message);
     } else {
       onLoginSuccess();
+    }
+  };
+
+  const handleGoToProjects = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      navigate('/projects');
+    } else {
+      alert('Please login to access your projects');
     }
   };
 
@@ -166,14 +177,24 @@ export const EnhancedLoginRegister: React.FC<EnhancedLoginRegisterProps> = ({
             <div className="h-px bg-gray-700 flex-1 max-w-xs" />
           </div>
 
-          <button
-            onClick={onBrowseAsGuest}
-            className="bg-blue-600 hover:bg-blue-700 px-12 py-4 rounded-xl font-black text-xl transition inline-flex items-center gap-3"
-          >
-            <Eye size={24} />
-            Browse as Guest (View Only)
-          </button>
-          <p className="text-gray-400 text-sm mt-3">Explore the platform without an account</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={handleGoToProjects}
+              className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 px-12 py-4 rounded-xl font-black text-xl transition inline-flex items-center gap-3 shadow-lg shadow-cyan-500/30"
+            >
+              <FolderOpen size={24} />
+              My Projects
+            </button>
+
+            <button
+              onClick={onBrowseAsGuest}
+              className="bg-blue-600 hover:bg-blue-700 px-12 py-4 rounded-xl font-black text-xl transition inline-flex items-center gap-3"
+            >
+              <Eye size={24} />
+              Browse as Guest
+            </button>
+          </div>
+          <p className="text-gray-400 text-sm mt-4">Access your projects or explore without an account</p>
         </div>
       </div>
     </div>
